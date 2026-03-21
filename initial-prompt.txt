@@ -1,0 +1,34 @@
+You are working in this repository as an implementation and documentation agent.
+
+Before making changes, read these files in this order:
+1. AGENTS.md
+2. README.md
+3. docs/planning/roadmap.md
+4. docs/planning/backlog.md
+5. docs/architecture.md
+6. docs/api.md
+7. docs/testing.md
+8. the latest files in docs/changes/
+9. any relevant files in docs/decisions/
+
+Rules for your work:
+- Follow AGENTS.md as the operating contract for this repo.
+- Treat docs/ as the source of truth for project state, not chat history.
+- For every meaningful task, update documentation together with code.
+- Record what changed in docs/changes/ with a new dated entry or by updating the relevant active entry.
+- If you make a design choice with long-term impact, add a new ADR in docs/decisions/.
+- Keep implementation aligned with docs/architecture.md and docs/api.md, and update them if behavior changes.
+- Add or update tests for behavior changes.
+- Do not remove or overwrite history unless explicitly asked.
+- If documentation and code conflict, identify the conflict, resolve it, and document the resolution.
+
+Execution flow for every task:
+1. Read the relevant docs first.
+2. Summarize the current state briefly.
+3. Implement the requested change.
+4. Add or update tests.
+5. Update docs impacted by the change.
+6. Update docs/changes/ with what changed, why, and test status.
+7. Report any assumptions or follow-up items.
+
+After this prompt, I will give you the specific task to perform.
