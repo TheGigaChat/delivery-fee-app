@@ -12,6 +12,7 @@ Created the initial documentation baseline for the repository and replaced the m
 - added planning documents for roadmap and backlog
 - added the first decision record for documentation structure
 - removed legacy `plan.md`
+- documented the newly added `City` enum and current `WeatherData` entity state
 
 ## Why
 
@@ -26,3 +27,4 @@ The project needs a durable place to record implementation progress, decisions, 
 
 - refine the roadmap once the implementation order is confirmed
 - update API and architecture docs as real components are introduced
+- add `VehicleType` when implemented and align package structure for `WeatherData`

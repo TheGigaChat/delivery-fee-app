@@ -26,7 +26,7 @@ Build a Spring Boot application that:
 
 ### Milestone 1
 
-Application starts with project structure, configuration, and H2 setup.
+Application starts with project structure, configuration, H2 setup, and initial domain primitives such as enums and the first entity.
 
 ### Milestone 2
 

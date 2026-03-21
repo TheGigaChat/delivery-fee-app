@@ -2,11 +2,13 @@
 
 ## Current State
 
-The repository currently contains a minimal Spring Boot application:
+The repository currently contains an early Spring Boot application with initial domain modeling:
 
 - application bootstrap class in `com.example.delivery`
 - default Spring Boot context-load test
-- no domain model, service layer, controller layer, or persistence layer yet
+- `City` enum with supported cities: `TALLINN`, `TARTU`, `PARNU`
+- `WeatherData` JPA entity with weather observation fields and a `City` enum reference
+- no service layer, controller layer, or repository layer yet
 
 ## Target Component Layout
 
@@ -38,13 +40,38 @@ Additional packages can be introduced if the logic grows:
 
 ## Core Domain Direction
 
-Primary domain concepts expected in the next iterations:
+Primary domain concepts already started or expected in the next iterations:
 
 - `WeatherData`
 - `City`
 - `VehicleType`
 - delivery fee calculation rules
 - forbidden vehicle usage conditions
+
+## Current Domain Model
+
+### `City`
+
+The `City` enum currently defines:
+
+- `TALLINN`
+- `TARTU`
+- `PARNU`
+
+### `WeatherData`
+
+The current `WeatherData` entity includes:
+
+- `id`
+- `stationName`
+- `wmoCode`
+- `airTemperature`
+- `windSpeed`
+- `weatherPhenomenon`
+- `observationTimestamp`
+- `city`
+
+Note: `WeatherData` currently lives under the `enums` package. That package placement should likely be corrected once package structure cleanup begins.
 
 ## Architectural Constraints
 
