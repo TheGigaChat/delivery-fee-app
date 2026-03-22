@@ -9,6 +9,11 @@ This repository is in the initial setup phase. The current codebase contains:
 - Spring Boot application bootstrap
 - basic test bootstrap
 - project dependencies for web, validation, JPA, and H2
+- in-memory H2 datasource and JPA configuration in `application.properties`
+- `VehicleType` enum for planned fee calculation inputs
+- `WeatherDataRepository` query support for loading the latest weather by city
+- a `WeatherDataService` for latest-observation lookup
+- a startup `CommandLineRunner` that seeds one sample weather observation
 - documentation structure for implementation, decisions, and change tracking
 
 ## Tech Stack
@@ -42,6 +47,7 @@ This repository is in the initial setup phase. The current codebase contains:
 - [Backlog](docs/planning/backlog.md)
 - [Decision Records](docs/decisions/0001-doc-structure.md)
 - [Change Log](docs/changes/2026-03-21-initial-review.md)
+- [Latest Change](docs/changes/2026-03-22-service-and-config-docs.md)
 
 ## Current Scope
 

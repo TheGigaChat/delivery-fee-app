@@ -25,17 +25,37 @@
 - `h2`
 - `spring-boot-starter-test`
 
+## Current Configuration
+
+The current `src/main/resources/application.properties` defines:
+
+- `spring.application.name=delivery-fee-app`
+- H2 datasource URL `jdbc:h2:mem:deliverydb`
+- datasource driver `org.h2.Driver`
+- datasource username `sa`
+- empty datasource password for local in-memory use
+- `spring.jpa.hibernate.ddl-auto=create-drop`
+- SQL logging enabled with formatted SQL output
+- H2 console enabled at `/h2-console`
+
+## Startup Bootstrapping
+
+Local application startup currently also includes:
+
+- a `CommandLineRunner` component named `TestDataRunner`
+- insertion of one sample `WeatherData` row for `City.TALLINN`
+- use of `LocalDateTime.now()` for the seed observation timestamp at boot time
+
+This seed data exists to make repository and service development easier before scheduled import is implemented.
+
 ## Planned Configuration
 
-Application configuration should cover:
+Configuration still expected in later iterations:
 
-- server port
-- H2 datasource settings
-- JPA behavior
-- H2 console
 - scheduler cron expression
 - weather source configuration if externalized
+- any environment-specific overrides if deployment targets are added
 
 ## Environment Notes
 
-The project currently has only the default `application.properties`. As environment-specific behavior appears, document profiles and required properties here.
+The project now has a concrete local-development `application.properties` for H2 and JPA bootstrapping. As environment-specific behavior appears, document profiles and required properties here.
