@@ -26,6 +26,7 @@ Do not keep active project knowledge only in temporary chat context.
 - Prefer unit tests for fee calculation rules and parsing logic.
 - Add integration tests for repository queries, scheduling boundaries, and REST endpoints when behavior spans layers.
 - When code changes affect behavior, tests should be updated in the same task.
+- Do not run tests automatically from the agent environment. Ask the user to run the relevant test command and report the result instead.
 
 ## Delivery Rules
 
