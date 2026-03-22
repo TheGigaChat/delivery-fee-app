@@ -1,7 +1,7 @@
 package com.example.delivery.repository;
 
 import com.example.delivery.enums.City;
-import com.example.delivery.enums.WeatherData;
+import com.example.delivery.entity.WeatherData;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

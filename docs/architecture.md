@@ -6,13 +6,16 @@ The repository currently contains an early Spring Boot application with initial 
 
 - application bootstrap class in `com.example.delivery`
 - datasource, JPA, and H2 console settings in `application.properties`
-- startup seed configuration via `TestDataRunner`
+- `AppConfig` providing shared Spring beans including `RestTemplate`
+- startup bootstrap via `TestDataRunner`
 - default Spring Boot context-load test
 - `City` enum with supported cities: `TALLINN`, `TARTU`, `PARNU`
 - `VehicleType` enum with `CAR`, `SCOOTER`, and `BIKE`
-- `WeatherData` JPA entity with weather observation fields and a `City` enum reference
+- `WeatherData` JPA entity under `entity` package with weather observation fields and a `City` enum reference
+- `StationCityMapper` for mapping known station names to supported cities
 - `WeatherDataRepository` with a latest-by-city lookup method
 - `WeatherDataService` for retrieving the newest observation for a city
+- `WeatherApiClient` for downloading observation XML from the Estonian Environment Agency
 - no controller layer yet
 
 ## Target Component Layout
@@ -30,9 +33,10 @@ Recommended package structure:
 Additional packages can be introduced if the logic grows:
 
 - `scheduler`
-- `client` for external weather API access
 - `mapper`
 - `rules` for delivery fee rule evaluation
+
+The current codebase keeps the external weather client under `service`. That placement can be revisited if API integration logic grows enough to justify a dedicated `client` package.
 
 ## Planned Flow
 
@@ -76,7 +80,7 @@ The current `WeatherData` entity includes:
 - `observationTimestamp`
 - `city`
 
-Note: `WeatherData` currently lives under the `enums` package. That package placement should likely be corrected once package structure cleanup begins.
+The entity now lives under `com.example.delivery.entity`, which aligns better with the planned package structure.
 
 ## Repository Layer
 
@@ -101,6 +105,27 @@ The service layer has been started with a focused weather lookup service:
 
 This is the first step toward keeping controllers thin and keeping lookup rules out of the controller layer.
 
+### `WeatherApiClient`
+
+The service layer also contains an external weather client:
+
+- uses a Spring-managed `RestTemplate`
+- fetches XML from `https://www.ilmateenistus.ee/ilma_andmed/xml/observations.php`
+- currently returns the raw XML response as `String`
+
+This is an initial integration step before parsing and persistence are formalized.
+
+## Mapping Support
+
+### `StationCityMapper`
+
+The mapper package now contains a station-to-city mapper:
+
+- maps supported station names to the internal `City` enum
+- returns `Optional<City>` for unmapped stations
+
+This supports later filtering of external weather observations down to the cities the application serves.
+
 ## Startup Configuration
 
 ### `TestDataRunner`
@@ -108,10 +133,11 @@ This is the first step toward keeping controllers thin and keeping lookup rules 
 The configuration package currently contains a startup seeding component:
 
 - `TestDataRunner` implements `CommandLineRunner`
+- calls `WeatherApiClient.fetchObservationsXml()` during startup and prints the raw response
 - inserts one sample Tallinn weather observation on application startup
 - relies on the in-memory H2 database and `create-drop` schema lifecycle for local bootstrapping
 
-This makes local development easier while the external weather import flow has not been implemented yet.
+This currently acts as a manual smoke-check for the external API client while also keeping local persistence bootstrapped.
 
 ## Architectural Constraints
 

@@ -4,6 +4,8 @@
 
 The repository currently has one bootstrap test that verifies the Spring context loads.
 
+Recent weather API integration work is only exercised manually through `TestDataRunner`; there are no automated tests yet for the client, mapping, or import path.
+
 ## Recommended Test Layers
 
 ### Unit Tests
@@ -14,6 +16,7 @@ Focus on isolated business rules:
 - temperature-based extra fee
 - wind-based extra fee and forbidden cases
 - weather phenomenon-based extra fee and forbidden cases
+- station-name to city mapping
 - XML parsing and station filtering logic
 
 ### Integration Tests
@@ -21,6 +24,7 @@ Focus on isolated business rules:
 Focus on behavior spanning multiple layers:
 
 - repository query for latest weather by city
+- external weather client behavior with mocked HTTP responses
 - REST endpoint contract
 - weather import persistence flow
 - scheduler-triggered import boundaries where practical

@@ -1,11 +1,13 @@
 package com.example.delivery.service;
 
 import com.example.delivery.enums.City;
-import com.example.delivery.enums.WeatherData;
+import com.example.delivery.entity.WeatherData;
 import com.example.delivery.repository.WeatherDataRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
 public class WeatherDataService {
 
     private WeatherDataRepository weatherDataRepository;

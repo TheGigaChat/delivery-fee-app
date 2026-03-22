@@ -38,15 +38,24 @@ The current `src/main/resources/application.properties` defines:
 - SQL logging enabled with formatted SQL output
 - H2 console enabled at `/h2-console`
 
+## Spring Beans
+
+The current application configuration also includes:
+
+- `AppConfig`, which registers a shared `RestTemplate` bean
+- injection of that `RestTemplate` into `WeatherApiClient` for outbound HTTP calls
+
 ## Startup Bootstrapping
 
 Local application startup currently also includes:
 
 - a `CommandLineRunner` component named `TestDataRunner`
+- a startup call to the external observations XML endpoint through `WeatherApiClient`
+- printing of the raw XML response to the console for manual verification
 - insertion of one sample `WeatherData` row for `City.TALLINN`
 - use of `LocalDateTime.now()` for the seed observation timestamp at boot time
 
-This seed data exists to make repository and service development easier before scheduled import is implemented.
+This startup path currently combines manual API-client verification with local seed data while automated import is still being built.
 
 ## Planned Configuration
 
@@ -58,4 +67,4 @@ Configuration still expected in later iterations:
 
 ## Environment Notes
 
-The project now has a concrete local-development `application.properties` for H2 and JPA bootstrapping. As environment-specific behavior appears, document profiles and required properties here.
+The project now has a concrete local-development `application.properties` for H2 and JPA bootstrapping. The external weather API URL is still hardcoded in `WeatherApiClient`; if that moves into configuration, document the property here.

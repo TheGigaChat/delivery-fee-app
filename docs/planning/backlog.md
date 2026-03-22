@@ -3,7 +3,6 @@
 ## Core Work
 
 - create domain model for weather observations
-- implement required enums and input validation
 - integrate weather source import
 - implement scheduled import at configurable cron
 - implement delivery fee calculation rules
@@ -14,7 +13,8 @@
 ## In Progress Or Recently Started
 
 - service-layer weather lookup based on the latest persisted observation
-- local startup seed data until external import replaces manual bootstrapping
+- external weather XML fetch through a first API client
+- local startup smoke-check and seed data until scheduled import replaces manual bootstrapping
 
 ## Documentation Work
 
@@ -25,4 +25,5 @@
 ## Optional Work
 
 - support historical fee calculation by datetime
+- externalize the weather source URL instead of hardcoding it in the client
 - make delivery fee rules configurable instead of hardcoded

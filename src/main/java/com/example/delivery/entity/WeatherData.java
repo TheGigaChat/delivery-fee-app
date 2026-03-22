@@ -1,5 +1,6 @@
-package com.example.delivery.enums;
+package com.example.delivery.entity;
 
+import com.example.delivery.enums.City;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
