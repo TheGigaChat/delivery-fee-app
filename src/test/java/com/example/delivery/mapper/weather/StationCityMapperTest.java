@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class StationCityMapperTest {
 
-    private StationCityMapper stationCityMapper = new StationCityMapper();
+    private final StationCityMapper stationCityMapper = new StationCityMapper();
 
     @Test
     void shouldMapTallinnHarkuToTallinn() {
@@ -23,6 +23,13 @@ class StationCityMapperTest {
         Optional<City> result = stationCityMapper.mapStationToCity("Tartu-Toravere");
 
         assertThat(result).contains(City.TARTU);
+    }
+
+    @Test
+    void shouldMapParnuToParnu() {
+        Optional<City> result = stationCityMapper.mapStationToCity("Pärnu");
+
+        assertThat(result).contains(City.PARNU);
     }
 
     @Test

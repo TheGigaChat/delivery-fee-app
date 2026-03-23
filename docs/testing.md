@@ -10,14 +10,17 @@ The first focused unit tests now cover `StationCityMapper` for:
 
 - `Tallinn-Harku -> City.TALLINN`
 - `Tartu-Toravere -> City.TARTU`
+- `Pärnu -> City.PARNU`
 - unknown station names returning `Optional.empty()`
 
 The test suite now also covers:
 
 - `WeatherDataService.getLatestWeather(city)` returning the repository result
 - `WeatherDataRepository.findFirstByCityOrderByObservationTimestampDesc(city)` for latest-record lookup and no-data cases
-- `WeatherXmlParser.parse(xml)` for valid XML, ignored extra tags, and core field extraction
+- `WeatherXmlParser.parse(xml)` for valid XML, ignored extra tags, core field extraction, and wrapped parser failures
 - `WeatherImportService.importWeatherData()` for filtering mapped stations and converting parsed values before save
+- private `parseBigDecimal(...)` handling for `null`, blank, and invalid input
+- `WeatherImportScheduler.importWeatherData()` delegating to `WeatherImportService`
 - `DeliveryFeeService.calculateDeliveryFee(...)` for base fees, weather surcharges, forbidden cases, missing weather data, and null/blank weather fields
 - `DeliveryFeeController` request and error handling through `@WebMvcTest`
 - DTO no-args constructor, getters, and setters for API response objects
@@ -37,6 +40,7 @@ Focus on isolated business rules:
 - XML parsing and station filtering logic
 - import-service filtering and conversion rules
 - DTO bean behavior where framework serialization depends on it
+- scheduler delegation without testing cron timing itself
 
 Priority order for the current codebase:
 
@@ -44,6 +48,7 @@ Priority order for the current codebase:
 - weather lookup service tests now
 - XML parsing tests now
 - weather import service tests now
+- scheduler delegation tests now
 - delivery fee calculation service tests now
 - controller slice tests now
 
@@ -83,6 +88,7 @@ Current import-service unit test focus:
 - only mapped stations are saved
 - unknown stations are ignored
 - numeric and string station values are converted into `WeatherData` correctly
+- `parseBigDecimal(...)` returns `null` for `null`, blank, and invalid input
 
 ## Running Tests
 

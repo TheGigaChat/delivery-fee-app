@@ -4,6 +4,7 @@ import com.example.delivery.dto.ObservationsXmlDto;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WeatherXmlParserTest {
 
@@ -68,5 +69,15 @@ class WeatherXmlParserTest {
         assertThat(result.getStations()).hasSize(1);
         assertThat(result.getStations().getFirst().getName()).isEqualTo("Tartu-Toravere");
         assertThat(result.getStations().getFirst().getAirtemperature()).isEqualTo("-1.2");
+    }
+
+    @Test
+    void shouldWrapParserErrorsInRuntimeException() {
+        String invalidXml = "<observations><station></observations>";
+
+        assertThatThrownBy(() -> weatherXmlParser.parse(invalidXml))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Failed to parse weather XML")
+                .hasCauseInstanceOf(Exception.class);
     }
 }
