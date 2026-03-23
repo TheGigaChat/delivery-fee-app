@@ -18,8 +18,10 @@ The test suite now also covers:
 - `WeatherDataRepository.findFirstByCityOrderByObservationTimestampDesc(city)` for latest-record lookup and no-data cases
 - `WeatherXmlParser.parse(xml)` for valid XML, ignored extra tags, and core field extraction
 - `WeatherImportService.importWeatherData()` for filtering mapped stations and converting parsed values before save
-- `DeliveryFeeService.calculateDeliveryFee(...)` for base fees, weather surcharges, forbidden cases, and missing weather data
+- `DeliveryFeeService.calculateDeliveryFee(...)` for base fees, weather surcharges, forbidden cases, missing weather data, and null/blank weather fields
 - `DeliveryFeeController` request and error handling through `@WebMvcTest`
+- DTO no-args constructor, getters, and setters for API response objects
+- application main method bootstrapping through `SpringApplication.run(...)`
 
 ## Recommended Test Layers
 
@@ -34,6 +36,7 @@ Focus on isolated business rules:
 - weather phenomenon-based extra fee and forbidden cases
 - XML parsing and station filtering logic
 - import-service filtering and conversion rules
+- DTO bean behavior where framework serialization depends on it
 
 Priority order for the current codebase:
 
@@ -52,6 +55,8 @@ Current fee-service unit test focus:
 - snow, sleet, and rain phenomenon surcharges
 - glaze, hail, and thunder forbidden-use conditions
 - missing weather data raising `WeatherDataNotFoundException`
+- `null` air temperature and wind speed behavior
+- `null` and blank phenomenon behavior
 
 ### Integration Tests
 
@@ -71,6 +76,7 @@ Current controller test focus:
 - invalid enum binding returns `400 Bad Request`
 - forbidden vehicle usage returns `400 Bad Request`
 - missing weather data returns `404 Not Found`
+- unhandled service error returns `500 Internal Server Error`
 
 Current import-service unit test focus:
 

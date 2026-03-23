@@ -36,7 +36,7 @@ class DeliveryFeeServiceTest {
             "PARNU,BIKE,2.5"
     })
     void shouldReturnBaseFeeForEachCityAndVehicle(City city, VehicleType vehicleType, String expectedFee) {
-        when(weatherDataService.getLatestWeather(city)).thenReturn(Optional.of(weather(city, "5", "5", "Clear")));
+        when(weatherDataService.getLatestWeather(city)).thenReturn(Optional.of(weather(city, new BigDecimal("5"), new BigDecimal("5"), "Clear")));
 
         BigDecimal result = deliveryFeeService.calculateDeliveryFee(city, vehicleType);
 
@@ -46,7 +46,7 @@ class DeliveryFeeServiceTest {
     @Test
     void shouldAddScooterTemperatureFeeWhenBelowMinusTen() {
         when(weatherDataService.getLatestWeather(City.TALLINN))
-                .thenReturn(Optional.of(weather(City.TALLINN, "-11", "5", "Clear")));
+                .thenReturn(Optional.of(weather(City.TALLINN, new BigDecimal("-11"), new BigDecimal("5"), "Clear")));
 
         BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.TALLINN, VehicleType.SCOOTER);
 
@@ -56,7 +56,7 @@ class DeliveryFeeServiceTest {
     @Test
     void shouldAddBikeTemperatureFeeWhenBetweenMinusTenAndZero() {
         when(weatherDataService.getLatestWeather(City.TARTU))
-                .thenReturn(Optional.of(weather(City.TARTU, "-5", "5", "Clear")));
+                .thenReturn(Optional.of(weather(City.TARTU, new BigDecimal("-5"), new BigDecimal("5"), "Clear")));
 
         BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.TARTU, VehicleType.BIKE);
 
@@ -64,9 +64,19 @@ class DeliveryFeeServiceTest {
     }
 
     @Test
+    void shouldIgnoreNullAirTemperature() {
+        when(weatherDataService.getLatestWeather(City.TALLINN))
+                .thenReturn(Optional.of(weather(City.TALLINN, null, new BigDecimal("5"), "Clear")));
+
+        BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.TALLINN, VehicleType.SCOOTER);
+
+        assertThat(result).isEqualByComparingTo("3.5");
+    }
+
+    @Test
     void shouldAddBikeWindFeeWhenWindIsBetweenTenAndTwenty() {
         when(weatherDataService.getLatestWeather(City.PARNU))
-                .thenReturn(Optional.of(weather(City.PARNU, "5", "15", "Clear")));
+                .thenReturn(Optional.of(weather(City.PARNU, new BigDecimal("5"), new BigDecimal("15"), "Clear")));
 
         BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.PARNU, VehicleType.BIKE);
 
@@ -76,7 +86,7 @@ class DeliveryFeeServiceTest {
     @Test
     void shouldThrowWhenBikeWindSpeedIsAboveTwenty() {
         when(weatherDataService.getLatestWeather(City.TALLINN))
-                .thenReturn(Optional.of(weather(City.TALLINN, "5", "21", "Clear")));
+                .thenReturn(Optional.of(weather(City.TALLINN, new BigDecimal("5"), new BigDecimal("21"), "Clear")));
 
         assertThatThrownBy(() -> deliveryFeeService.calculateDeliveryFee(City.TALLINN, VehicleType.BIKE))
                 .isInstanceOf(ForbiddenVehicleUsageException.class)
@@ -84,9 +94,19 @@ class DeliveryFeeServiceTest {
     }
 
     @Test
+    void shouldIgnoreNullWindSpeed() {
+        when(weatherDataService.getLatestWeather(City.TARTU))
+                .thenReturn(Optional.of(weather(City.TARTU, new BigDecimal("5"), null, "Clear")));
+
+        BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.TARTU, VehicleType.BIKE);
+
+        assertThat(result).isEqualByComparingTo("3.0");
+    }
+
+    @Test
     void shouldAddPhenomenonFeeForSnowOrSleet() {
         when(weatherDataService.getLatestWeather(City.TARTU))
-                .thenReturn(Optional.of(weather(City.TARTU, "2", "5", "Light snow")));
+                .thenReturn(Optional.of(weather(City.TARTU, new BigDecimal("2"), new BigDecimal("5"), "Light snow")));
 
         BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.TARTU, VehicleType.SCOOTER);
 
@@ -96,11 +116,31 @@ class DeliveryFeeServiceTest {
     @Test
     void shouldAddPhenomenonFeeForRain() {
         when(weatherDataService.getLatestWeather(City.PARNU))
-                .thenReturn(Optional.of(weather(City.PARNU, "2", "5", "Moderate rain")));
+                .thenReturn(Optional.of(weather(City.PARNU, new BigDecimal("2"), new BigDecimal("5"), "Moderate rain")));
 
         BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.PARNU, VehicleType.SCOOTER);
 
         assertThat(result).isEqualByComparingTo("2.5");
+    }
+
+    @Test
+    void shouldIgnoreNullPhenomenon() {
+        when(weatherDataService.getLatestWeather(City.PARNU))
+                .thenReturn(Optional.of(weather(City.PARNU, new BigDecimal("2"), new BigDecimal("5"), null)));
+
+        BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.PARNU, VehicleType.SCOOTER);
+
+        assertThat(result).isEqualByComparingTo("2.0");
+    }
+
+    @Test
+    void shouldIgnoreBlankPhenomenon() {
+        when(weatherDataService.getLatestWeather(City.PARNU))
+                .thenReturn(Optional.of(weather(City.PARNU, new BigDecimal("2"), new BigDecimal("5"), "   ")));
+
+        BigDecimal result = deliveryFeeService.calculateDeliveryFee(City.PARNU, VehicleType.SCOOTER);
+
+        assertThat(result).isEqualByComparingTo("2.0");
     }
 
     @ParameterizedTest
@@ -111,7 +151,7 @@ class DeliveryFeeServiceTest {
     })
     void shouldThrowWhenPhenomenonForbidsVehicleUsage(String phenomenon) {
         when(weatherDataService.getLatestWeather(City.TALLINN))
-                .thenReturn(Optional.of(weather(City.TALLINN, "2", "5", phenomenon)));
+                .thenReturn(Optional.of(weather(City.TALLINN, new BigDecimal("2"), new BigDecimal("5"), phenomenon)));
 
         assertThatThrownBy(() -> deliveryFeeService.calculateDeliveryFee(City.TALLINN, VehicleType.BIKE))
                 .isInstanceOf(ForbiddenVehicleUsageException.class)
@@ -127,14 +167,14 @@ class DeliveryFeeServiceTest {
                 .hasMessage("No weather data found for city: TARTU");
     }
 
-    private WeatherData weather(City city, String airTemperature, String windSpeed, String phenomenon) {
+    private WeatherData weather(City city, BigDecimal airTemperature, BigDecimal windSpeed, String phenomenon) {
         WeatherData weatherData = new WeatherData();
         weatherData.setCity(city);
         weatherData.setStationName("Test station");
         weatherData.setWmoCode("26038");
         weatherData.setObservationTimestamp(LocalDateTime.of(2026, 3, 23, 12, 0));
-        weatherData.setAirTemperature(new BigDecimal(airTemperature));
-        weatherData.setWindSpeed(new BigDecimal(windSpeed));
+        weatherData.setAirTemperature(airTemperature);
+        weatherData.setWindSpeed(windSpeed);
         weatherData.setWeatherPhenomenon(phenomenon);
         return weatherData;
     }
