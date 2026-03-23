@@ -18,6 +18,8 @@ The test suite now also covers:
 - `WeatherDataRepository.findFirstByCityOrderByObservationTimestampDesc(city)` for latest-record lookup and no-data cases
 - `WeatherXmlParser.parse(xml)` for valid XML, ignored extra tags, and core field extraction
 - `WeatherImportService.importWeatherData()` for filtering mapped stations and converting parsed values before save
+- `DeliveryFeeService.calculateDeliveryFee(...)` for base fees, weather surcharges, forbidden cases, and missing weather data
+- `DeliveryFeeController` request and error handling through `@WebMvcTest`
 
 ## Recommended Test Layers
 
@@ -39,7 +41,17 @@ Priority order for the current codebase:
 - weather lookup service tests now
 - XML parsing tests now
 - weather import service tests now
-- delivery fee calculation service tests as soon as the fee rules are implemented
+- delivery fee calculation service tests now
+- controller slice tests now
+
+Current fee-service unit test focus:
+
+- base fee for each city and vehicle type
+- scooter and bike temperature fee rules
+- bike wind surcharge and forbidden-use threshold
+- snow, sleet, and rain phenomenon surcharges
+- glaze, hail, and thunder forbidden-use conditions
+- missing weather data raising `WeatherDataNotFoundException`
 
 ### Integration Tests
 
@@ -52,6 +64,13 @@ Focus on behavior spanning multiple layers:
 - scheduler-triggered import boundaries where practical
 
 These can wait until the business logic and endpoint contract are stable enough to test without excessive setup cost.
+
+Current controller test focus:
+
+- valid request returns `200 OK`
+- invalid enum binding returns `400 Bad Request`
+- forbidden vehicle usage returns `400 Bad Request`
+- missing weather data returns `404 Not Found`
 
 Current import-service unit test focus:
 
