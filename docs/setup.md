@@ -17,61 +17,84 @@
 .\mvnw.cmd test
 ```
 
-## Current Dependencies
+## Runtime Configuration
 
-- `spring-boot-starter-web`
-- `spring-boot-starter-data-jpa`
-- `spring-boot-starter-validation`
-- `h2`
-- `jackson-dataformat-xml`
-- `spring-boot-starter-test`
+### `src/main/resources/application.properties`
 
-## Current Configuration
-
-The current `src/main/resources/application.properties` defines:
+Defines:
 
 - `spring.application.name=delivery-fee-app`
 - H2 datasource URL `jdbc:h2:mem:deliverydb`
 - datasource driver `org.h2.Driver`
 - datasource username `sa`
-- empty datasource password for local in-memory use
+- empty datasource password
 - `spring.jpa.hibernate.ddl-auto=create-drop`
-- SQL logging enabled with formatted SQL output
+- SQL logging enabled
+- formatted SQL output
+- `spring.jpa.open-in-view=false`
 - H2 console enabled at `/h2-console`
-- scheduled import cron property `weather.import.cron=0 15 * * * *`
+- scheduled import cron via `weather.import.cron=0 15 * * * *`
+
+### `src/main/resources/application.yml`
+
+Defines:
+
+- `delivery.fee.base-fees`
+
+Current configured values:
+
+- Tallinn: `CAR 4.0`, `SCOOTER 3.5`, `BIKE 3.0`
+- Tartu: `CAR 3.5`, `SCOOTER 3.0`, `BIKE 2.5`
+- Parnu: `CAR 3.0`, `SCOOTER 2.5`, `BIKE 2.0`
+
+### `src/test/resources/application-test.yml`
+
+Defines the fee table used by `DeliveryFeeServiceTest`.
+
+This keeps fee-service tests stable when runtime fee values are changed deliberately.
 
 ## Spring Beans
 
-The current application configuration also includes:
+The application config includes:
 
-- `AppConfig`, which registers a shared `RestTemplate` bean
-- injection of that `RestTemplate` into `WeatherApiClient` for outbound HTTP calls
-- a Spring-managed `WeatherXmlParser` component for XML-to-DTO parsing
-- injected import collaborators such as `StationCityMapper`, `WeatherImportService`, and `WeatherImportScheduler`
+- `AppConfig` for the shared `RestTemplate`
+- `DeliveryFeeProperties` for base-fee binding
+- `WeatherXmlParser` as a Spring component
+- `StationCityMapper` as a Spring component
+- `WeatherImportScheduler` as the scheduled trigger
 
 ## Scheduling
 
-Scheduled execution is enabled through `@EnableScheduling` on the main application class.
+Scheduling is enabled through `@EnableScheduling` in the application bootstrap class.
 
-The current scheduled import setup includes:
+The active scheduled flow is:
 
-- `WeatherImportScheduler`
-- `@Scheduled(cron = "${weather.import.cron}")`
-- an application property that controls the import cadence without code changes
+1. `WeatherImportScheduler`
+2. `WeatherImportService`
+3. `WeatherApiClient`
+4. `WeatherXmlParser`
+5. `WeatherDataRepository`
 
-## Startup Bootstrapping
+## External Dependency
 
-The previous `TestDataRunner`-based import bootstrap is currently commented out.
+The application fetches weather data from:
 
-The intended execution path is now the scheduler-driven import flow.
+```text
+https://www.ilmateenistus.ee/ilma_andmed/xml/observations.php
+```
 
-## Planned Configuration
+The source URL is still hardcoded in `WeatherApiClient`.
 
-Configuration still expected in later iterations:
+## Local Access
 
-- any environment-specific overrides if deployment targets are added
-- weather source configuration if externalized
+Application endpoint:
 
-## Environment Notes
+```text
+http://localhost:8080/api/delivery-fee
+```
 
-The project now has a concrete local-development `application.properties` for H2, JPA, and import scheduling bootstrapping. The external weather API URL is still hardcoded in `WeatherApiClient`; if that moves into configuration, document the property here.
+H2 console:
+
+```text
+http://localhost:8080/h2-console
+```
