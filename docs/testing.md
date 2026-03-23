@@ -16,6 +16,7 @@ The test suite now also covers:
 
 - `WeatherDataService.getLatestWeather(city)` returning the repository result
 - `WeatherDataRepository.findFirstByCityOrderByObservationTimestampDesc(city)` for latest-record lookup and no-data cases
+- `WeatherXmlParser.parse(xml)` for valid XML, ignored extra tags, and core field extraction
 
 ## Recommended Test Layers
 
@@ -34,8 +35,8 @@ Priority order for the current codebase:
 
 - mapper tests now
 - weather lookup service tests now
+- XML parsing tests now
 - delivery fee calculation service tests as soon as the fee rules are implemented
-- parsing tests once XML parsing moves beyond raw client fetches
 
 ### Integration Tests
 

@@ -16,6 +16,7 @@ The repository currently contains an early Spring Boot application with initial 
 - `WeatherDataRepository` with a latest-by-city lookup method
 - `WeatherDataService` for retrieving the newest observation for a city
 - `WeatherApiClient` for downloading observation XML from the Estonian Environment Agency
+- `ObservationsXmlDto`, `StationXmlDto`, and `WeatherXmlParser` for XML deserialization
 - no controller layer yet
 
 ## Target Component Layout
@@ -115,6 +116,26 @@ The service layer also contains an external weather client:
 
 This is an initial integration step before parsing and persistence are formalized.
 
+## Parsing Support
+
+### `ObservationsXmlDto` and `StationXmlDto`
+
+The DTO layer now includes XML-mapping classes for the external weather response:
+
+- `ObservationsXmlDto` maps the `observations` root, timestamp attribute, and repeated `station` elements
+- `StationXmlDto` maps station fields such as `name`, `wmocode`, `airtemperature`, `windspeed`, and `phenomenon`
+- both DTOs ignore unknown XML properties so non-essential source changes do not immediately break parsing
+
+### `WeatherXmlParser`
+
+The parser package now contains the first XML parser component:
+
+- uses Jackson XML via `XmlMapper`
+- converts raw XML strings into `ObservationsXmlDto`
+- wraps parsing failures in a runtime exception with parser-specific context
+
+This establishes the parser boundary before weather import is connected to persistence.
+
 ## Mapping Support
 
 ### `StationCityMapper`
@@ -134,10 +155,11 @@ The configuration package currently contains a startup seeding component:
 
 - `TestDataRunner` implements `CommandLineRunner`
 - calls `WeatherApiClient.fetchObservationsXml()` during startup and prints the raw response
+- parses the fetched XML through `WeatherXmlParser`
 - inserts one sample Tallinn weather observation on application startup
 - relies on the in-memory H2 database and `create-drop` schema lifecycle for local bootstrapping
 
-This currently acts as a manual smoke-check for the external API client while also keeping local persistence bootstrapped.
+This currently acts as a manual smoke-check for the external API client and parser while also keeping local persistence bootstrapped.
 
 ## Architectural Constraints
 

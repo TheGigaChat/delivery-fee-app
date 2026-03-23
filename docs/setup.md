@@ -23,6 +23,7 @@
 - `spring-boot-starter-data-jpa`
 - `spring-boot-starter-validation`
 - `h2`
+- `jackson-dataformat-xml`
 - `spring-boot-starter-test`
 
 ## Current Configuration
@@ -44,6 +45,7 @@ The current application configuration also includes:
 
 - `AppConfig`, which registers a shared `RestTemplate` bean
 - injection of that `RestTemplate` into `WeatherApiClient` for outbound HTTP calls
+- a Spring-managed `WeatherXmlParser` component for XML-to-DTO parsing
 
 ## Startup Bootstrapping
 
@@ -51,11 +53,12 @@ Local application startup currently also includes:
 
 - a `CommandLineRunner` component named `TestDataRunner`
 - a startup call to the external observations XML endpoint through `WeatherApiClient`
-- printing of the raw XML response to the console for manual verification
+- parsing of the returned XML through `WeatherXmlParser`
+- printing of parsed observation details to the console for manual verification
 - insertion of one sample `WeatherData` row for `City.TALLINN`
 - use of `LocalDateTime.now()` for the seed observation timestamp at boot time
 
-This startup path currently combines manual API-client verification with local seed data while automated import is still being built.
+This startup path currently combines manual API-client and parser verification with local seed data while automated import is still being built.
 
 ## Planned Configuration
 
