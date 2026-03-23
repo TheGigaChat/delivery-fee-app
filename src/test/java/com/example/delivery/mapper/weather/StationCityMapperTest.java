@@ -9,23 +9,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class StationCityMapperTest {
 
+    private StationCityMapper stationCityMapper = new StationCityMapper();
+
     @Test
     void shouldMapTallinnHarkuToTallinn() {
-        Optional<City> result = StationCityMapper.mapStationToCity("Tallinn-Harku");
+        Optional<City> result = stationCityMapper.mapStationToCity("Tallinn-Harku");
 
         assertThat(result).contains(City.TALLINN);
     }
 
     @Test
     void shouldMapTartuToravereToTartu() {
-        Optional<City> result = StationCityMapper.mapStationToCity("Tartu-Toravere");
+        Optional<City> result = stationCityMapper.mapStationToCity("Tartu-Toravere");
 
         assertThat(result).contains(City.TARTU);
     }
 
     @Test
     void shouldReturnEmptyForUnknownStation() {
-        Optional<City> result = StationCityMapper.mapStationToCity("Narva");
+        Optional<City> result = stationCityMapper.mapStationToCity("Narva");
 
         assertThat(result).isEmpty();
     }
