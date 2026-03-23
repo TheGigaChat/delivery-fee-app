@@ -1,27 +1,30 @@
 # Backlog
 
-## Core Work
+## Completed Core Work
 
-- create domain model for weather observations
-- integrate weather source import
-- write unit and integration tests
+- create the weather observation domain model
+- implement weather source import
+- persist historical weather observations
+- implement latest-weather lookup by city
+- implement delivery fee calculation rules
+- expose the delivery-fee REST endpoint
+- add centralized exception handling
+- add test coverage for the main business flows
+- document architecture, API, setup, and testing
 
-## In Progress Or Recently Started
+## Remaining Optional Work
 
-- service-layer weather lookup based on the latest persisted observation
-- external weather XML fetch through a first API client
-- scheduler-driven import execution through configurable cron
-- delivery fee calculation rules and domain-specific exceptions
-- REST endpoint and centralized exception handling for delivery-fee requests
+- externalize the weather source URL instead of hardcoding it in `WeatherApiClient`
+- add a full import-to-API integration test with mocked external HTTP
+- support historical fee calculation by explicit datetime
+- move more weather rule constants into configuration if operational tuning becomes necessary
 
-## Documentation Work
+## Documentation State
 
-- update API examples as the endpoint contract evolves
-- document environment-specific profiles and overrides when they are introduced
-- record design decisions when implementation branches
+The permanent documentation now reflects the final delivered implementation.
 
-## Optional Work
+Future updates should only be needed for:
 
-- support historical fee calculation by datetime
-- externalize the weather source URL instead of hardcoding it in the client
-- make delivery fee rules configurable instead of hardcoded
+- bug fixes
+- optional enhancements
+- deployment-specific configuration

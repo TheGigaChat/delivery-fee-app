@@ -1,74 +1,122 @@
 # Architecture
 
-## Current State
+## Final System Overview
 
-The repository currently contains an early Spring Boot application with initial domain modeling:
+The application imports weather observations from the Estonian Environment Agency, maps supported stations to internal delivery cities, stores the observations in H2, and exposes a REST endpoint that calculates delivery fees from the latest persisted weather data.
 
-- application bootstrap class in `com.example.delivery`
-- scheduling enabled at the application level through `@EnableScheduling`
-- datasource, JPA, H2 console, and weather import cron settings in `application.properties`
-- `AppConfig` providing shared Spring beans including `RestTemplate`
-- default Spring Boot context-load test
-- `City` enum with supported cities: `TALLINN`, `TARTU`, `PARNU`
-- `VehicleType` enum with `CAR`, `SCOOTER`, and `BIKE`
-- `WeatherData` JPA entity under `entity` package with weather observation fields and a `City` enum reference
-- `StationCityMapper` for mapping known station names to supported cities
-- `WeatherDataRepository` with a latest-by-city lookup method
-- `WeatherDataService` for retrieving the newest observation for a city
-- `DeliveryFeeService` for fee calculation based on city, vehicle, and latest weather
-- `DeliveryFeeController` exposing the fee calculation endpoint
-- `DeliveryFeeResponse` and `ErrorResponse` DTOs for API responses
-- `GlobalExceptionHandler` for centralized exception-to-response mapping
-- `WeatherApiClient` for downloading observation XML from the Estonian Environment Agency
-- `ObservationsXmlDto`, `StationXmlDto`, and `WeatherXmlParser` for XML deserialization
-- `WeatherImportService` for orchestrating fetch, parse, map, and persistence
-- `WeatherImportScheduler` for periodic import execution
-- custom exceptions for missing weather data and forbidden vehicle usage
+## Package Layout
 
-## Target Component Layout
+- `com.example.delivery`
+- `com.example.delivery.config`
+- `com.example.delivery.controller`
+- `com.example.delivery.dto`
+- `com.example.delivery.entity`
+- `com.example.delivery.enums`
+- `com.example.delivery.exception`
+- `com.example.delivery.mapper`
+- `com.example.delivery.parser`
+- `com.example.delivery.repository`
+- `com.example.delivery.service`
 
-Recommended package structure:
+## Main Runtime Flow
 
-- `controller`
-- `service`
-- `repository`
-- `entity`
-- `dto`
-- `config`
-- `exception`
+1. `WeatherImportScheduler` triggers import using `weather.import.cron`.
+2. `WeatherApiClient` downloads the latest observation XML.
+3. `WeatherXmlParser` deserializes XML into `ObservationsXmlDto` and `StationXmlDto`.
+4. `StationCityMapper` filters source stations down to supported cities.
+5. `WeatherImportService` converts source values into `WeatherData` entities and stores them.
+6. `DeliveryFeeController` receives a fee request.
+7. `DeliveryFeeService` loads the latest weather for the requested city through `WeatherDataService`.
+8. `DeliveryFeeService` calculates the fee from configured base fees plus weather-based rules.
+9. `GlobalExceptionHandler` converts domain and binding failures into structured HTTP responses.
 
-Additional packages can be introduced if the logic grows:
+## Application Layer Responsibilities
 
-- `scheduler`
-- `mapper`
-- `rules` for delivery fee rule evaluation
+### Bootstrap
 
-The current codebase keeps the external weather client under `service`. That placement can be revisited if API integration logic grows enough to justify a dedicated `client` package.
+`DeliveryFeeAppApplication`:
 
-## Current Flow
+- starts the Spring Boot application
+- enables scheduling
+- enables binding for `DeliveryFeeProperties`
 
-1. a scheduled job triggers weather import
-2. the import service fetches and parses source XML
-3. relevant stations are mapped into `WeatherData` entities
-4. new observations are inserted into H2 without overwriting history
-5. the fee calculation service loads the latest observation for a city and applies business rules
-6. the REST controller returns the calculated fee or an error response
+### Configuration
 
-## Core Domain Direction
+`AppConfig`:
 
-Primary domain concepts already started or expected in the next iterations:
+- provides the shared `RestTemplate` bean
 
-- `WeatherData`
-- `City`
-- `VehicleType`
-- delivery fee calculation rules
-- forbidden vehicle usage conditions
+`DeliveryFeeProperties`:
 
-## Current Domain Model
+- binds `delivery.fee.base-fees` from `application.yml`
+- supplies configured base fees by city and vehicle type
+
+`WeatherImportScheduler`:
+
+- runs `importWeatherData()` on the configured cron schedule
+- delegates work to `WeatherImportService`
+
+### Controller
+
+`DeliveryFeeController`:
+
+- exposes `GET /api/delivery-fee`
+- accepts `city` and `vehicleType` query parameters
+- delegates to `DeliveryFeeService`
+- returns `DeliveryFeeResponse`
+
+### Services
+
+`WeatherApiClient`:
+
+- fetches raw XML from `https://www.ilmateenistus.ee/ilma_andmed/xml/observations.php`
+
+`WeatherImportService`:
+
+- orchestrates fetch, parse, map, convert, and persist
+- ignores unsupported stations
+- converts numeric strings to `BigDecimal`
+- stores a new `WeatherData` row per imported supported station
+
+`WeatherDataService`:
+
+- returns the latest observation for a city
+
+`DeliveryFeeService`:
+
+- resolves latest weather for a city
+- reads base fees from configuration
+- applies temperature, wind, and phenomenon rules
+- throws `WeatherDataNotFoundException` when no weather exists
+- throws `ForbiddenVehicleUsageException` for forbidden weather conditions
+- throws `IllegalArgumentException` when base-fee configuration is missing for a city/vehicle pair
+
+### Persistence
+
+`WeatherDataRepository`:
+
+- extends `JpaRepository<WeatherData, Long>`
+- provides `findFirstByCityOrderByObservationTimestampDesc(City city)`
+
+### Mapping And Parsing
+
+`StationCityMapper`:
+
+- maps supported external station names to `City`
+- supports Tallinn, Tartu, and Parnu station names
+- returns `Optional.empty()` for unsupported stations
+
+`WeatherXmlParser`:
+
+- uses Jackson XML
+- ignores unknown source tags via the DTO layer
+- wraps parse failures in `RuntimeException("Failed to parse weather XML", cause)`
+
+## Domain Model
 
 ### `City`
 
-The `City` enum currently defines:
+Supported values:
 
 - `TALLINN`
 - `TARTU`
@@ -76,7 +124,7 @@ The `City` enum currently defines:
 
 ### `VehicleType`
 
-The `VehicleType` enum currently defines:
+Supported values:
 
 - `CAR`
 - `SCOOTER`
@@ -84,7 +132,7 @@ The `VehicleType` enum currently defines:
 
 ### `WeatherData`
 
-The current `WeatherData` entity includes:
+Persisted fields:
 
 - `id`
 - `stationName`
@@ -95,174 +143,92 @@ The current `WeatherData` entity includes:
 - `observationTimestamp`
 - `city`
 
-The entity now lives under `com.example.delivery.entity`, which aligns better with the planned package structure.
+The application preserves historical observations by inserting new rows instead of updating the latest one in place.
 
-## Repository Layer
+## DTO Model
 
-### `WeatherDataRepository`
+### API DTOs
 
-The repository layer has been started with a basic Spring Data repository:
+`DeliveryFeeResponse`:
 
-- `WeatherDataRepository extends JpaRepository<WeatherData, Long>`
-- supports the default CRUD operations generated by Spring Data JPA
-- adds `findFirstByCityOrderByObservationTimestampDesc(City city)` to load the newest persisted weather record for a city
+- Java record
+- fields: `city`, `vehicleType`, `deliveryFee`
 
-This keeps persistence access thin while providing the minimum query needed for later fee calculation rules.
+`ErrorResponse`:
 
-## Service Layer
+- Java record
+- fields: `timestamp`, `status`, `error`, `message`, `path`
 
-### `WeatherDataService`
+### XML DTOs
 
-The service layer has been started with a focused weather lookup service:
+`ObservationsXmlDto`:
 
-- `getLatestWeather(City city)` delegates to the repository latest-by-city query
-- returns `Optional<WeatherData>` so missing weather data can be handled explicitly by later layers
+- source timestamp
+- list of `station` entries
 
-This is the first step toward keeping controllers thin and keeping lookup rules out of the controller layer.
+`StationXmlDto`:
 
-### `DeliveryFeeService`
+- station name
+- WMO code
+- air temperature
+- wind speed
+- phenomenon
 
-The service layer now also contains a fee calculation service:
+Unknown XML fields are ignored so non-essential source changes do not immediately break parsing.
 
-- loads the latest weather for the requested city through `WeatherDataService`
-- applies base fee rules by city and vehicle type
-- applies extra fees for scooter and bike temperature conditions
-- applies bike wind-speed surcharge and forbidden-use checks
-- applies weather phenomenon surcharge and forbidden-use checks
-- throws `WeatherDataNotFoundException` when no weather record exists for the requested city
-- throws `ForbiddenVehicleUsageException` when weather conditions make the selected vehicle invalid
+## Fee Calculation Rules
 
-This keeps fee rules in a dedicated business service instead of mixing them with controllers or repository code.
+Base fees are externalized in `src/main/resources/application.yml`.
 
-### `WeatherApiClient`
+Configured base fees:
 
-The service layer also contains an external weather client:
+- Tallinn: `CAR 4.0`, `SCOOTER 3.5`, `BIKE 3.0`
+- Tartu: `CAR 3.5`, `SCOOTER 3.0`, `BIKE 2.5`
+- Parnu: `CAR 3.0`, `SCOOTER 2.5`, `BIKE 2.0`
 
-- uses a Spring-managed `RestTemplate`
-- fetches XML from `https://www.ilmateenistus.ee/ilma_andmed/xml/observations.php`
-- currently returns the raw XML response as `String`
+Extra-fee rules:
 
-This is an initial integration step before parsing and persistence are formalized.
+- scooter and bike: temperature below `-10` adds `1.0`
+- scooter and bike: temperature from `-10` to `0` adds `0.5`
+- bike: wind from `10` to `20` adds `0.5`
+- bike: wind above `20` is forbidden
+- scooter and bike: `snow` or `sleet` adds `1.0`
+- scooter and bike: `rain` adds `0.5`
+- scooter and bike: `glaze`, `hail`, or `thunder` are forbidden
 
-### `WeatherImportService`
+Null or blank weather values do not add extra fees.
 
-The service layer now also contains an import orchestration service:
+## Exception Handling
 
-- fetches XML through `WeatherApiClient`
-- parses the payload through `WeatherXmlParser`
-- uses `StationCityMapper` to filter supported stations
-- converts parsed values into `WeatherData` entities and saves them through `WeatherDataRepository`
-
-This keeps the import flow in a dedicated service instead of spreading orchestration logic across startup code.
-
-## Controller Layer
-
-### `DeliveryFeeController`
-
-The controller layer now exposes the delivery-fee endpoint:
-
-- `GET /api/delivery-fee`
-- accepts `city` and `vehicleType` as query parameters bound to enums
-- delegates calculation to `DeliveryFeeService`
-- returns `DeliveryFeeResponse`
-
-The controller remains thin and delegates business rules to the service layer.
-
-## DTO Support
-
-### `DeliveryFeeResponse`
-
-Represents a successful fee calculation response with:
-
-- `city`
-- `vehicleType`
-- `deliveryFee`
-
-### `ErrorResponse`
-
-Represents structured API error output with:
-
-- `timestamp`
-- `status`
-- `error`
-- `message`
-- `path`
-
-### `ObservationsXmlDto` and `StationXmlDto`
-
-The DTO layer also includes XML-mapping classes for the external weather response:
-
-- `ObservationsXmlDto` maps the `observations` root, timestamp attribute, and repeated `station` elements
-- `StationXmlDto` maps station fields such as `name`, `wmocode`, `airtemperature`, `windspeed`, and `phenomenon`
-- both DTOs ignore unknown XML properties so non-essential source changes do not immediately break parsing
-
-## Parsing Support
-
-### `WeatherXmlParser`
-
-The parser package now contains the first XML parser component:
-
-- uses Jackson XML via `XmlMapper`
-- converts raw XML strings into `ObservationsXmlDto`
-- wraps parsing failures in a runtime exception with parser-specific context
-
-This establishes the parser boundary before weather import is connected to persistence.
-
-## Mapping Support
-
-### `StationCityMapper`
-
-The mapper package now contains a station-to-city mapper:
-
-- is registered as a Spring `@Component` for consistency with injected collaborators
-- maps supported station names to the internal `City` enum
-- returns `Optional<City>` for unmapped stations
-
-This supports later filtering of external weather observations down to the cities the application serves.
-
-## Exception Support
-
-### `WeatherDataNotFoundException`
-
-Raised when fee calculation cannot find the latest weather data for the requested city.
-
-### `ForbiddenVehicleUsageException`
-
-Raised when wind or weather phenomenon rules make the selected vehicle type invalid.
-
-### `GlobalExceptionHandler`
-
-Maps domain and request-binding errors into HTTP responses:
+`GlobalExceptionHandler` maps:
 
 - `WeatherDataNotFoundException -> 404 Not Found`
 - `ForbiddenVehicleUsageException -> 400 Bad Request`
-- invalid enum/request parameter binding -> 400 Bad Request
-- unhandled errors -> 500 Internal Server Error
+- `MethodArgumentTypeMismatchException -> 400 Bad Request`
+- unhandled `Exception -> 500 Internal Server Error`
 
-## Scheduling
+## Configuration Files
 
-### `WeatherImportScheduler`
+`src/main/resources/application.properties`:
 
-The configuration package now contains a scheduled import component:
+- Spring application name
+- H2 datasource
+- JPA settings
+- H2 console
+- import cron
 
-- `WeatherImportScheduler` is a Spring `@Component`
-- `importWeatherData()` is triggered by `@Scheduled(cron = "${weather.import.cron}")`
-- delegates each scheduled run to `WeatherImportService`
+`src/main/resources/application.yml`:
 
-This moves import execution from manual startup invocation toward the intended production flow.
+- base-fee configuration
 
-## Startup Configuration
+`src/test/resources/application-test.yml`:
 
-### `TestDataRunner`
-
-The previous startup bootstrapping runner is currently commented out and no longer drives import execution.
-
-Scheduled import is now the active execution path.
+- dedicated fee values for fee-service tests
 
 ## Architectural Constraints
 
-- Historical weather data must remain queryable.
-- Fee calculation should depend on latest weather for the requested city.
-- Exception handling should be centralized.
-- Public API behavior should be documented alongside implementation.
-
+- controllers stay thin and delegate business rules
+- fee calculation depends on the latest persisted weather per city
+- historical observations are preserved
+- API errors are centralized in the global handler
+- documentation under `docs/` remains the source of truth for project state

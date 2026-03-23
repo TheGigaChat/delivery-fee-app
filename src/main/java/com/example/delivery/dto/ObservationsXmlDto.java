@@ -18,18 +18,38 @@ public class ObservationsXmlDto {
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<StationXmlDto> stations;
 
+    /**
+     * Returns the source timestamp attribute value.
+     *
+     * @return source timestamp as string
+     */
     public String getTimestamp() {
         return timestamp;
     }
 
+    /**
+     * Sets the source timestamp attribute value.
+     *
+     * @param timestamp source timestamp as string
+     */
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
+    /**
+     * Returns the parsed station entries.
+     *
+     * @return parsed stations
+     */
     public List<StationXmlDto> getStations() {
         return stations;
     }
 
+    /**
+     * Sets the parsed station entries.
+     *
+     * @param stations parsed stations
+     */
     public void setStations(List<StationXmlDto> stations) {
         this.stations = stations;
     }

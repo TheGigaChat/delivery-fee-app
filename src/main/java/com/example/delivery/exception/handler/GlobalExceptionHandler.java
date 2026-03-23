@@ -15,8 +15,15 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Converts missing weather data errors into a 404 response.
+     *
+     * @param ex thrown domain exception
+     * @param request current HTTP request
+     * @return structured not-found error response
+     */
     @ExceptionHandler(WeatherDataNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleWeatherDataNotFound (
+    public ResponseEntity<ErrorResponse> handleWeatherDataNotFound(
             WeatherDataNotFoundException ex,
             HttpServletRequest request
     ) {
@@ -31,8 +38,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    /**
+     * Converts forbidden vehicle usage errors into a 400 response.
+     *
+     * @param ex thrown domain exception
+     * @param request current HTTP request
+     * @return structured bad-request error response
+     */
     @ExceptionHandler(ForbiddenVehicleUsageException.class)
-    public ResponseEntity<ErrorResponse> handleForbiddenVehicleUsageException (
+    public ResponseEntity<ErrorResponse> handleForbiddenVehicleUsageException(
             ForbiddenVehicleUsageException ex,
             HttpServletRequest request
     ) {
@@ -47,8 +61,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    /**
+     * Converts invalid request parameter values into a 400 response.
+     *
+     * @param ex thrown binding exception
+     * @param request current HTTP request
+     * @return structured bad-request error response
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException (
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
             MethodArgumentTypeMismatchException ex,
             HttpServletRequest request
     ) {
@@ -63,11 +84,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    /**
+     * Converts unhandled exceptions into a 500 response.
+     *
+     * @param ex thrown exception
+     * @param request current HTTP request
+     * @return structured internal-server-error response
+     */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException (
+    public ResponseEntity<ErrorResponse> handleException(
             Exception ex,
             HttpServletRequest request
-    )  {
+    ) {
         ErrorResponse error = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

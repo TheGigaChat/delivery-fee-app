@@ -1,103 +1,122 @@
 # Testing
 
-## Current State
+## Current Automated Coverage
 
-The repository currently has one bootstrap test that verifies the Spring context loads.
+The test suite currently covers:
 
-Recent weather API integration work is only exercised manually through `TestDataRunner`; there are no automated tests yet for the client or full import path.
+- Spring Boot context startup
+- application main method bootstrapping
+- station-to-city mapping
+- XML parser success and failure paths
+- API client delegation to `RestTemplate`
+- weather import filtering and value conversion
+- scheduler delegation
+- latest-weather repository lookup
+- latest-weather service lookup
+- delivery fee calculation rules and edge cases
+- controller request and error mapping
 
-The first focused unit tests now cover `StationCityMapper` for:
+## Test Classes
 
-- `Tallinn-Harku -> City.TALLINN`
-- `Tartu-Toravere -> City.TARTU`
-- unknown station names returning `Optional.empty()`
+- `DeliveryFeeAppApplicationTests`
+- `DeliveryFeeAppApplicationMainTest`
+- `StationCityMapperTest`
+- `WeatherXmlParserTest`
+- `WeatherApiClientTest`
+- `WeatherImportServiceTest`
+- `WeatherImportSchedulerTest`
+- `WeatherDataRepositoryTest`
+- `WeatherDataServiceTest`
+- `DeliveryFeeServiceTest`
+- `DeliveryFeeControllerTest`
 
-The test suite now also covers:
+## Delivery Fee Service Coverage
 
-- `WeatherDataService.getLatestWeather(city)` returning the repository result
-- `WeatherDataRepository.findFirstByCityOrderByObservationTimestampDesc(city)` for latest-record lookup and no-data cases
-- `WeatherXmlParser.parse(xml)` for valid XML, ignored extra tags, and core field extraction
-- `WeatherImportService.importWeatherData()` for filtering mapped stations and converting parsed values before save
-- `DeliveryFeeService.calculateDeliveryFee(...)` for base fees, weather surcharges, forbidden cases, and missing weather data
-- `DeliveryFeeController` request and error handling through `@WebMvcTest`
-
-## Recommended Test Layers
-
-### Unit Tests
-
-Focus on isolated business rules:
-
-- station-name to city mapping
-- base fee per city and vehicle
-- temperature-based extra fee
-- wind-based extra fee and forbidden cases
-- weather phenomenon-based extra fee and forbidden cases
-- XML parsing and station filtering logic
-- import-service filtering and conversion rules
-
-Priority order for the current codebase:
-
-- mapper tests now
-- weather lookup service tests now
-- XML parsing tests now
-- weather import service tests now
-- delivery fee calculation service tests now
-- controller slice tests now
-
-Current fee-service unit test focus:
+`DeliveryFeeServiceTest` covers:
 
 - base fee for each city and vehicle type
-- scooter and bike temperature fee rules
-- bike wind surcharge and forbidden-use threshold
-- snow, sleet, and rain phenomenon surcharges
-- glaze, hail, and thunder forbidden-use conditions
-- missing weather data raising `WeatherDataNotFoundException`
+- configuration binding from `src/test/resources/application-test.yml`
+- missing base-fee configuration
+- scooter and bike temperature rules
+- bike wind surcharge
+- bike forbidden-use threshold
+- snow and sleet surcharge
+- rain surcharge
+- forbidden phenomena
+- missing weather data
+- `null` air temperature
+- `null` wind speed
+- `null` and blank phenomenon
 
-### Integration Tests
+## Controller Coverage
 
-Focus on behavior spanning multiple layers:
+`DeliveryFeeControllerTest` uses `@WebMvcTest` with a mocked `DeliveryFeeService`.
 
-- repository query for latest weather by city
-- external weather client behavior with mocked HTTP responses
-- REST endpoint contract
-- weather import persistence flow
-- scheduler-triggered import boundaries where practical
+Covered statuses:
 
-These can wait until the business logic and endpoint contract are stable enough to test without excessive setup cost.
+- `200 OK`
+- `400 Bad Request` for invalid enums
+- `400 Bad Request` for forbidden vehicle usage
+- `404 Not Found` for missing weather data
+- `500 Internal Server Error` for unexpected service failures
 
-Current controller test focus:
+## Import And Parsing Coverage
 
-- valid request returns `200 OK`
-- invalid enum binding returns `400 Bad Request`
-- forbidden vehicle usage returns `400 Bad Request`
-- missing weather data returns `404 Not Found`
+`WeatherXmlParserTest` covers:
 
-Current import-service unit test focus:
+- valid XML parsing
+- unknown extra tags ignored by DTO mapping
+- station-name and air-temperature extraction
+- parser failure wrapping
+
+`WeatherImportServiceTest` covers:
 
 - only mapped stations are saved
 - unknown stations are ignored
-- numeric and string station values are converted into `WeatherData` correctly
+- parsed source values are converted into `WeatherData`
+- invalid, blank, and null numeric source values become `null`
+
+## Repository And Scheduler Coverage
+
+`WeatherDataRepositoryTest` covers:
+
+- saving weather rows
+- latest-by-city lookup
+- missing-city lookup
+- persisted entity `id` access
+
+`WeatherImportSchedulerTest` covers:
+
+- scheduler method delegates once to `WeatherImportService`
+
+## Test Configuration
+
+`src/test/resources/application-test.yml` provides a dedicated fee table for fee-service tests.
+
+This avoids coupling all fee assertions directly to the runtime values in `src/main/resources/application.yml`.
 
 ## Running Tests
 
-The agent should not run tests directly from its environment for this repository.
+The agent should not run tests from its own environment in this repository.
 
-Instead:
+Expected workflow:
 
-- the agent adds or updates the relevant tests
-- the user runs the requested test command locally
-- the user reports the result back so follow-up fixes can be made if needed
+- the agent adds or updates tests
+- the user runs the relevant Maven command locally
+- the user reports the result back
 
-## Test Data Guidance
+Typical command:
 
-- Use focused fixtures for weather scenarios.
-- Make edge cases explicit: threshold values, forbidden conditions, and missing data.
-- Prefer readable test names describing business rules.
+```powershell
+.\mvnw.cmd test
+```
 
-## Definition of Done
+## Remaining Gaps
 
-A feature change is not complete unless:
+Areas not covered by a full end-to-end integration test:
 
-- behavior is documented
-- relevant tests exist or are updated
-- gaps are explicitly recorded in the associated change note
+- scheduler timing against the real cron trigger
+- live external HTTP integration against the real weather service
+- full XML fetch -> parse -> persist -> API flow in one test
+
+Those gaps are acceptable for this project because the core business logic and wiring boundaries are already covered at unit and slice/repository level.

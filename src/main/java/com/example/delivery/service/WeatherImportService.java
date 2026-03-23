@@ -9,7 +9,6 @@ import com.example.delivery.parser.WeatherXmlParser;
 import com.example.delivery.repository.WeatherDataRepository;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -21,6 +20,14 @@ public class WeatherImportService {
     private final StationCityMapper stationCityMapper;
     private final WeatherDataRepository weatherDataRepository;
 
+    /**
+     * Creates the service that imports weather observations.
+     *
+     * @param weatherApiClient client used to fetch source XML
+     * @param weatherXmlParser parser used to deserialize the source XML
+     * @param stationCityMapper mapper used to map source stations to supported cities
+     * @param weatherDataRepository repository used to persist imported weather data
+     */
     public WeatherImportService(
         WeatherApiClient weatherApiClient,
         WeatherXmlParser weatherXmlParser,
@@ -33,6 +40,9 @@ public class WeatherImportService {
         this.weatherDataRepository = weatherDataRepository;
     }
 
+    /**
+     * Imports the latest weather observations from the external source.
+     */
     public void importWeatherData() {
 
         String xml = weatherApiClient.fetchObservationsXml();

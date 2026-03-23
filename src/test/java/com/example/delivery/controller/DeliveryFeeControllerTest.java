@@ -88,4 +88,19 @@ class DeliveryFeeControllerTest {
                 .andExpect(jsonPath("$.message").value("No weather data found for city: PARNU"))
                 .andExpect(jsonPath("$.path").value("/api/delivery-fee"));
     }
+
+    @Test
+    void shouldReturn500ForUnhandledServiceError() throws Exception {
+        when(deliveryFeeService.calculateDeliveryFee(eq(City.TARTU), eq(VehicleType.SCOOTER)))
+                .thenThrow(new RuntimeException("Unexpected service error"));
+
+        mockMvc.perform(get("/api/delivery-fee")
+                        .param("city", "TARTU")
+                        .param("vehicleType", "SCOOTER")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.message").value("Unexpected service error"))
+                .andExpect(jsonPath("$.path").value("/api/delivery-fee"));
+    }
 }

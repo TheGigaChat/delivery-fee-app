@@ -9,6 +9,7 @@ import com.example.delivery.repository.WeatherDataRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -90,6 +91,27 @@ class WeatherImportServiceTest {
         assertThat(result.getWeatherPhenomenon()).isEqualTo("Clear");
         assertThat(result.getCity()).isNotNull();
         assertThat(result.getObservationTimestamp()).isNotNull();
+    }
+
+    @Test
+    void shouldReturnNullWhenParseBigDecimalGetsNull() throws Exception {
+        assertThat(invokeParseBigDecimal(null)).isNull();
+    }
+
+    @Test
+    void shouldReturnNullWhenParseBigDecimalGetsBlank() throws Exception {
+        assertThat(invokeParseBigDecimal("   ")).isNull();
+    }
+
+    @Test
+    void shouldReturnNullWhenParseBigDecimalGetsInvalidNumber() throws Exception {
+        assertThat(invokeParseBigDecimal("abc")).isNull();
+    }
+
+    private BigDecimal invokeParseBigDecimal(String value) throws Exception {
+        Method method = WeatherImportService.class.getDeclaredMethod("parseBigDecimal", String.class);
+        method.setAccessible(true);
+        return (BigDecimal) method.invoke(weatherImportService, value);
     }
 
     private StationXmlDto station(String name, String wmoCode, String airTemperature, String windSpeed, String phenomenon) {

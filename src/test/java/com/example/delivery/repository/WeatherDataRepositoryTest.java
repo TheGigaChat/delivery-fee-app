@@ -25,11 +25,12 @@ class WeatherDataRepositoryTest {
         WeatherData tartuRecord = createWeatherData("Tartu-Toravere", City.TARTU, LocalDateTime.of(2026, 3, 22, 13, 0));
 
         weatherDataRepository.save(olderTallinn);
-        weatherDataRepository.save(newerTallinn);
+        WeatherData savedNewestTallinn = weatherDataRepository.save(newerTallinn);
         weatherDataRepository.save(tartuRecord);
 
         Optional<WeatherData> result = weatherDataRepository.findFirstByCityOrderByObservationTimestampDesc(City.TALLINN);
 
+        assertThat(savedNewestTallinn.getId()).isNotNull();
         assertThat(result).isPresent();
         assertThat(result.get().getCity()).isEqualTo(City.TALLINN);
         assertThat(result.get().getObservationTimestamp()).isEqualTo(LocalDateTime.of(2026, 3, 22, 12, 0));

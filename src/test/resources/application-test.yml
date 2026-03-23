@@ -1,0 +1,15 @@
+delivery:
+  fee:
+    base-fees:
+      TALLINN:
+        CAR: 4.0
+        SCOOTER: 3.5
+        BIKE: 3.0
+      TARTU:
+        CAR: 3.5
+        SCOOTER: 2.5
+        BIKE: 3.0
+      PARNU:
+        CAR: 3.0
+        SCOOTER: 2.0
+        BIKE: 2.5
