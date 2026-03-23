@@ -16,12 +16,14 @@ The repository currently contains an early Spring Boot application with initial 
 - `WeatherDataRepository` with a latest-by-city lookup method
 - `WeatherDataService` for retrieving the newest observation for a city
 - `DeliveryFeeService` for fee calculation based on city, vehicle, and latest weather
+- `DeliveryFeeController` exposing the fee calculation endpoint
+- `DeliveryFeeResponse` and `ErrorResponse` DTOs for API responses
+- `GlobalExceptionHandler` for centralized exception-to-response mapping
 - `WeatherApiClient` for downloading observation XML from the Estonian Environment Agency
 - `ObservationsXmlDto`, `StationXmlDto`, and `WeatherXmlParser` for XML deserialization
 - `WeatherImportService` for orchestrating fetch, parse, map, and persistence
 - `WeatherImportScheduler` for periodic import execution
 - custom exceptions for missing weather data and forbidden vehicle usage
-- no controller layer yet
 
 ## Target Component Layout
 
@@ -43,13 +45,13 @@ Additional packages can be introduced if the logic grows:
 
 The current codebase keeps the external weather client under `service`. That placement can be revisited if API integration logic grows enough to justify a dedicated `client` package.
 
-## Planned Flow
+## Current Flow
 
 1. a scheduled job triggers weather import
 2. the import service fetches and parses source XML
 3. relevant stations are mapped into `WeatherData` entities
 4. new observations are inserted into H2 without overwriting history
-5. the fee calculation service loads the latest observation for a city
+5. the fee calculation service loads the latest observation for a city and applies business rules
 6. the REST controller returns the calculated fee or an error response
 
 ## Core Domain Direction
@@ -153,15 +155,48 @@ The service layer now also contains an import orchestration service:
 
 This keeps the import flow in a dedicated service instead of spreading orchestration logic across startup code.
 
-## Parsing Support
+## Controller Layer
+
+### `DeliveryFeeController`
+
+The controller layer now exposes the delivery-fee endpoint:
+
+- `GET /api/delivery-fee`
+- accepts `city` and `vehicleType` as query parameters bound to enums
+- delegates calculation to `DeliveryFeeService`
+- returns `DeliveryFeeResponse`
+
+The controller remains thin and delegates business rules to the service layer.
+
+## DTO Support
+
+### `DeliveryFeeResponse`
+
+Represents a successful fee calculation response with:
+
+- `city`
+- `vehicleType`
+- `deliveryFee`
+
+### `ErrorResponse`
+
+Represents structured API error output with:
+
+- `timestamp`
+- `status`
+- `error`
+- `message`
+- `path`
 
 ### `ObservationsXmlDto` and `StationXmlDto`
 
-The DTO layer now includes XML-mapping classes for the external weather response:
+The DTO layer also includes XML-mapping classes for the external weather response:
 
 - `ObservationsXmlDto` maps the `observations` root, timestamp attribute, and repeated `station` elements
 - `StationXmlDto` maps station fields such as `name`, `wmocode`, `airtemperature`, `windspeed`, and `phenomenon`
 - both DTOs ignore unknown XML properties so non-essential source changes do not immediately break parsing
+
+## Parsing Support
 
 ### `WeatherXmlParser`
 
@@ -195,6 +230,15 @@ Raised when fee calculation cannot find the latest weather data for the requeste
 
 Raised when wind or weather phenomenon rules make the selected vehicle type invalid.
 
+### `GlobalExceptionHandler`
+
+Maps domain and request-binding errors into HTTP responses:
+
+- `WeatherDataNotFoundException -> 404 Not Found`
+- `ForbiddenVehicleUsageException -> 400 Bad Request`
+- invalid enum/request parameter binding -> 400 Bad Request
+- unhandled errors -> 500 Internal Server Error
+
 ## Scheduling
 
 ### `WeatherImportScheduler`
@@ -221,3 +265,4 @@ Scheduled import is now the active execution path.
 - Fee calculation should depend on latest weather for the requested city.
 - Exception handling should be centralized.
 - Public API behavior should be documented alongside implementation.
+

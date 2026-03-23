@@ -2,13 +2,13 @@
 
 ## Status
 
-No application-specific REST endpoints are implemented yet.
+The delivery-fee REST endpoint is now implemented.
 
-## Planned Endpoint
+## Endpoint
 
 `GET /api/delivery-fee`
 
-## Planned Query Parameters
+## Query Parameters
 
 - `city`
 - `vehicleType`
@@ -19,20 +19,9 @@ Example:
 GET /api/delivery-fee?city=TARTU&vehicleType=BIKE
 ```
 
-## Current Fee Calculation Behavior
+## Success Response
 
-The underlying fee calculation service is now implemented and currently applies:
-
-- base fee by `city` and `vehicleType`
-- scooter and bike temperature surcharge rules
-- bike wind surcharge and forbidden-use rules
-- weather phenomenon surcharge and forbidden-use rules
-- `WeatherDataNotFoundException` when latest weather is missing for the requested city
-- `ForbiddenVehicleUsageException` when weather conditions forbid the selected vehicle type
-
-## Planned Success Response
-
-Suggested response shape:
+Current response shape:
 
 ```json
 {
@@ -42,15 +31,36 @@ Suggested response shape:
 }
 ```
 
-## Planned Error Response
+## Error Response
 
-Suggested response shape:
+Current error response shape:
 
 ```json
 {
-  "message": "Usage of selected vehicle type is forbidden"
+  "timestamp": "2026-03-23T12:00:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Usage of selected vehicle type is forbidden",
+  "path": "/api/delivery-fee"
 }
 ```
+
+## Implemented Behavior
+
+The endpoint delegates to `DeliveryFeeService`, which currently applies:
+
+- base fee by `city` and `vehicleType`
+- scooter and bike temperature surcharge rules
+- bike wind surcharge and forbidden-use rules
+- weather phenomenon surcharge and forbidden-use rules
+
+## HTTP Status Mapping
+
+- `200 OK` for valid requests
+- `400 Bad Request` for invalid enum/request parameter values
+- `400 Bad Request` for `ForbiddenVehicleUsageException`
+- `404 Not Found` for `WeatherDataNotFoundException`
+- `500 Internal Server Error` for uncaught server-side failures
 
 ## Expected Error Cases
 
@@ -58,13 +68,3 @@ Suggested response shape:
 - unknown vehicle type
 - missing weather data for city
 - forbidden vehicle usage due to weather conditions
-
-## Documentation Policy
-
-When the endpoint is implemented, this file should be updated with:
-
-- exact parameter names and accepted values
-- example success and failure responses
-- HTTP status codes
-- validation rules
-- mapping from domain exceptions to HTTP responses

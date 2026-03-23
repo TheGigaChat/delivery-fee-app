@@ -4,8 +4,6 @@
 
 - create domain model for weather observations
 - integrate weather source import
-- expose fee calculation endpoint
-- add centralized error handling
 - write unit and integration tests
 
 ## In Progress Or Recently Started
@@ -14,10 +12,11 @@
 - external weather XML fetch through a first API client
 - scheduler-driven import execution through configurable cron
 - delivery fee calculation rules and domain-specific exceptions
+- REST endpoint and centralized exception handling for delivery-fee requests
 
 ## Documentation Work
 
-- update API examples once endpoint exists
+- update API examples as the endpoint contract evolves
 - document environment-specific profiles and overrides when they are introduced
 - record design decisions when implementation branches
 
