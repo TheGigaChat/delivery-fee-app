@@ -46,19 +46,17 @@ The current application configuration also includes:
 - `AppConfig`, which registers a shared `RestTemplate` bean
 - injection of that `RestTemplate` into `WeatherApiClient` for outbound HTTP calls
 - a Spring-managed `WeatherXmlParser` component for XML-to-DTO parsing
+- injected import collaborators such as `StationCityMapper` and `WeatherImportService`
 
 ## Startup Bootstrapping
 
 Local application startup currently also includes:
 
 - a `CommandLineRunner` component named `TestDataRunner`
-- a startup call to the external observations XML endpoint through `WeatherApiClient`
-- parsing of the returned XML through `WeatherXmlParser`
-- printing of parsed observation details to the console for manual verification
-- insertion of one sample `WeatherData` row for `City.TALLINN`
-- use of `LocalDateTime.now()` for the seed observation timestamp at boot time
+- delegation to `WeatherImportService.importWeatherData()`
+- fetch, parse, map, and persistence executed through the service layer
 
-This startup path currently combines manual API-client and parser verification with local seed data while automated import is still being built.
+This startup path currently exercises the import service end-to-end while automated scheduling is still being built.
 
 ## Planned Configuration
 

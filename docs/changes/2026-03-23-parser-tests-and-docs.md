@@ -2,7 +2,7 @@
 
 ## Summary
 
-Added parser unit tests for XML deserialization and updated the permanent documentation to reflect the new DTO and parser layer.
+Added parser and import-service unit tests and updated the permanent documentation to reflect the DTO, parser, and import orchestration layer.
 
 ## Changes
 
@@ -14,7 +14,7 @@ Added parser unit tests for XML deserialization and updated the permanent docume
 
 ## Why
 
-The codebase now includes a real XML parsing boundary instead of only fetching raw XML. That parsing behavior is stable enough to test immediately, and the architecture docs need to reflect that the import pipeline has moved one step further.
+The codebase now includes both a real XML parsing boundary and an import orchestration service instead of only fetching raw XML. Those behaviors are stable enough to test immediately, and the architecture docs need to reflect that the import pipeline has moved from isolated pieces toward a real workflow.
 
 ## Tests
 
@@ -26,3 +26,5 @@ The codebase now includes a real XML parsing boundary instead of only fetching r
 - add mocked HTTP client tests for `WeatherApiClient`
 - connect parsed station data to `StationCityMapper` and persistence logic
 - add import-flow integration tests once parsing and persistence are wired together
+
+

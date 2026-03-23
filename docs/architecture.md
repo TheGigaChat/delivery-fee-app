@@ -17,6 +17,7 @@ The repository currently contains an early Spring Boot application with initial 
 - `WeatherDataService` for retrieving the newest observation for a city
 - `WeatherApiClient` for downloading observation XML from the Estonian Environment Agency
 - `ObservationsXmlDto`, `StationXmlDto`, and `WeatherXmlParser` for XML deserialization
+- `WeatherImportService` for orchestrating fetch, parse, map, and persistence
 - no controller layer yet
 
 ## Target Component Layout
@@ -116,6 +117,17 @@ The service layer also contains an external weather client:
 
 This is an initial integration step before parsing and persistence are formalized.
 
+### `WeatherImportService`
+
+The service layer now also contains an import orchestration service:
+
+- fetches XML through `WeatherApiClient`
+- parses the payload through `WeatherXmlParser`
+- uses `StationCityMapper` to filter supported stations
+- converts parsed values into `WeatherData` entities and saves them through `WeatherDataRepository`
+
+This keeps the import flow in a dedicated service instead of spreading orchestration logic across startup code.
+
 ## Parsing Support
 
 ### `ObservationsXmlDto` and `StationXmlDto`
@@ -142,6 +154,7 @@ This establishes the parser boundary before weather import is connected to persi
 
 The mapper package now contains a station-to-city mapper:
 
+- is registered as a Spring `@Component` for consistency with injected collaborators
 - maps supported station names to the internal `City` enum
 - returns `Optional<City>` for unmapped stations
 
@@ -151,15 +164,13 @@ This supports later filtering of external weather observations down to the citie
 
 ### `TestDataRunner`
 
-The configuration package currently contains a startup seeding component:
+The configuration package currently contains a startup bootstrapping component:
 
 - `TestDataRunner` implements `CommandLineRunner`
-- calls `WeatherApiClient.fetchObservationsXml()` during startup and prints the raw response
-- parses the fetched XML through `WeatherXmlParser`
-- inserts one sample Tallinn weather observation on application startup
+- delegates startup import execution to `WeatherImportService`
 - relies on the in-memory H2 database and `create-drop` schema lifecycle for local bootstrapping
 
-This currently acts as a manual smoke-check for the external API client and parser while also keeping local persistence bootstrapped.
+This currently acts as a manual smoke-check for the import flow while also keeping local persistence bootstrapped.
 
 ## Architectural Constraints
 
