@@ -5,9 +5,9 @@
 The repository currently contains an early Spring Boot application with initial domain modeling:
 
 - application bootstrap class in `com.example.delivery`
-- datasource, JPA, and H2 console settings in `application.properties`
+- scheduling enabled at the application level through `@EnableScheduling`
+- datasource, JPA, H2 console, and weather import cron settings in `application.properties`
 - `AppConfig` providing shared Spring beans including `RestTemplate`
-- startup bootstrap via `TestDataRunner`
 - default Spring Boot context-load test
 - `City` enum with supported cities: `TALLINN`, `TARTU`, `PARNU`
 - `VehicleType` enum with `CAR`, `SCOOTER`, and `BIKE`
@@ -18,6 +18,7 @@ The repository currently contains an early Spring Boot application with initial 
 - `WeatherApiClient` for downloading observation XML from the Estonian Environment Agency
 - `ObservationsXmlDto`, `StationXmlDto`, and `WeatherXmlParser` for XML deserialization
 - `WeatherImportService` for orchestrating fetch, parse, map, and persistence
+- `WeatherImportScheduler` for periodic import execution
 - no controller layer yet
 
 ## Target Component Layout
@@ -160,17 +161,25 @@ The mapper package now contains a station-to-city mapper:
 
 This supports later filtering of external weather observations down to the cities the application serves.
 
+## Scheduling
+
+### `WeatherImportScheduler`
+
+The configuration package now contains a scheduled import component:
+
+- `WeatherImportScheduler` is a Spring `@Component`
+- `importWeatherData()` is triggered by `@Scheduled(cron = "${weather.import.cron}")`
+- delegates each scheduled run to `WeatherImportService`
+
+This moves import execution from manual startup invocation toward the intended production flow.
+
 ## Startup Configuration
 
 ### `TestDataRunner`
 
-The configuration package currently contains a startup bootstrapping component:
+The previous startup bootstrapping runner is currently commented out and no longer drives import execution.
 
-- `TestDataRunner` implements `CommandLineRunner`
-- delegates startup import execution to `WeatherImportService`
-- relies on the in-memory H2 database and `create-drop` schema lifecycle for local bootstrapping
-
-This currently acts as a manual smoke-check for the import flow while also keeping local persistence bootstrapped.
+Scheduled import is now the active execution path.
 
 ## Architectural Constraints
 

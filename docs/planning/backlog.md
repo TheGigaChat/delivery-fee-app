@@ -4,7 +4,6 @@
 
 - create domain model for weather observations
 - integrate weather source import
-- implement scheduled import at configurable cron
 - implement delivery fee calculation rules
 - expose fee calculation endpoint
 - add centralized error handling
@@ -14,7 +13,7 @@
 
 - service-layer weather lookup based on the latest persisted observation
 - external weather XML fetch through a first API client
-- local startup smoke-check and seed data until scheduled import replaces manual bootstrapping
+- scheduler-driven import execution through configurable cron
 
 ## Documentation Work
 

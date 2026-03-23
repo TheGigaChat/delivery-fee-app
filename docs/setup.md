@@ -38,6 +38,7 @@ The current `src/main/resources/application.properties` defines:
 - `spring.jpa.hibernate.ddl-auto=create-drop`
 - SQL logging enabled with formatted SQL output
 - H2 console enabled at `/h2-console`
+- scheduled import cron property `weather.import.cron=0 15 * * * *`
 
 ## Spring Beans
 
@@ -46,26 +47,31 @@ The current application configuration also includes:
 - `AppConfig`, which registers a shared `RestTemplate` bean
 - injection of that `RestTemplate` into `WeatherApiClient` for outbound HTTP calls
 - a Spring-managed `WeatherXmlParser` component for XML-to-DTO parsing
-- injected import collaborators such as `StationCityMapper` and `WeatherImportService`
+- injected import collaborators such as `StationCityMapper`, `WeatherImportService`, and `WeatherImportScheduler`
+
+## Scheduling
+
+Scheduled execution is enabled through `@EnableScheduling` on the main application class.
+
+The current scheduled import setup includes:
+
+- `WeatherImportScheduler`
+- `@Scheduled(cron = "${weather.import.cron}")`
+- an application property that controls the import cadence without code changes
 
 ## Startup Bootstrapping
 
-Local application startup currently also includes:
+The previous `TestDataRunner`-based import bootstrap is currently commented out.
 
-- a `CommandLineRunner` component named `TestDataRunner`
-- delegation to `WeatherImportService.importWeatherData()`
-- fetch, parse, map, and persistence executed through the service layer
-
-This startup path currently exercises the import service end-to-end while automated scheduling is still being built.
+The intended execution path is now the scheduler-driven import flow.
 
 ## Planned Configuration
 
 Configuration still expected in later iterations:
 
-- scheduler cron expression
-- weather source configuration if externalized
 - any environment-specific overrides if deployment targets are added
+- weather source configuration if externalized
 
 ## Environment Notes
 
-The project now has a concrete local-development `application.properties` for H2 and JPA bootstrapping. The external weather API URL is still hardcoded in `WeatherApiClient`; if that moves into configuration, document the property here.
+The project now has a concrete local-development `application.properties` for H2, JPA, and import scheduling bootstrapping. The external weather API URL is still hardcoded in `WeatherApiClient`; if that moves into configuration, document the property here.
