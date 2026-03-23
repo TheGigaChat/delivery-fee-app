@@ -23,9 +23,8 @@ The test suite now also covers:
 - `WeatherImportService.importWeatherData()` for filtering mapped stations and converting parsed values before save
 - private `parseBigDecimal(...)` handling for `null`, blank, and invalid input
 - `WeatherImportScheduler.importWeatherData()` delegating to `WeatherImportService`
-- `DeliveryFeeService.calculateDeliveryFee(...)` for base fees, weather surcharges, forbidden cases, missing weather data, and null/blank weather fields
+- `DeliveryFeeService.calculateDeliveryFee(...)` for base fees, missing base-fee configuration, weather surcharges, forbidden cases, missing weather data, and null/blank weather fields
 - `DeliveryFeeController` request and error handling through `@WebMvcTest`
-- DTO no-args constructor, getters, and setters for API response objects
 - application main method bootstrapping through `SpringApplication.run(...)`
 
 ## Recommended Test Layers
@@ -41,7 +40,6 @@ Focus on isolated business rules:
 - weather phenomenon-based extra fee and forbidden cases
 - XML parsing and station filtering logic
 - import-service filtering and conversion rules
-- DTO bean behavior where framework serialization depends on it
 - scheduler delegation without testing cron timing itself
 - API client delegation to the HTTP client abstraction
 
@@ -58,11 +56,12 @@ Priority order for the current codebase:
 
 Current fee-service unit test setup:
 
-- DeliveryFeeServiceTest loads base fees from src/test/resources/application-test.yml so the service is exercised against bound configuration instead of mocked fee maps
+- `DeliveryFeeServiceTest` loads base fees from `src/test/resources/application-test.yml` so the service is exercised against bound configuration instead of mocked fee maps
 
 Current fee-service unit test focus:
 
 - base fee for each city and vehicle type
+- exception when the base fee for a city and vehicle pair is missing from configuration
 - scooter and bike temperature fee rules
 - bike wind surcharge and forbidden-use threshold
 - snow, sleet, and rain phenomenon surcharges
@@ -121,6 +120,3 @@ A feature change is not complete unless:
 - behavior is documented
 - relevant tests exist or are updated
 - gaps are explicitly recorded in the associated change note
-
-
-

@@ -20,6 +20,8 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,6 +60,23 @@ class DeliveryFeeServiceTest {
                 .isEqualByComparingTo("2.5");
         assertThat(deliveryFeeProperties.getBaseFees().get(City.PARNU).get(VehicleType.BIKE))
                 .isEqualByComparingTo("2.5");
+    }
+
+    @Test
+    void shouldThrowWhenBaseFeeIsNotConfigured() {
+        when(weatherDataService.getLatestWeather(City.TALLINN))
+                .thenReturn(Optional.of(weather(City.TALLINN, new BigDecimal("5"), new BigDecimal("5"), "Clear")));
+
+        Map<City, Map<VehicleType, BigDecimal>> originalBaseFees = copyBaseFees(deliveryFeeProperties.getBaseFees());
+        deliveryFeeProperties.getBaseFees().get(City.TALLINN).remove(VehicleType.CAR);
+
+        try {
+            assertThatThrownBy(() -> deliveryFeeService.calculateDeliveryFee(City.TALLINN, VehicleType.CAR))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Base fee not configured for city TALLINN and vehicle type CAR");
+        } finally {
+            deliveryFeeProperties.setBaseFees(originalBaseFees);
+        }
     }
 
     @ParameterizedTest
@@ -202,6 +221,14 @@ class DeliveryFeeServiceTest {
         assertThatThrownBy(() -> deliveryFeeService.calculateDeliveryFee(City.TARTU, VehicleType.CAR))
                 .isInstanceOf(WeatherDataNotFoundException.class)
                 .hasMessage("No weather data found for city: TARTU");
+    }
+
+    private Map<City, Map<VehicleType, BigDecimal>> copyBaseFees(Map<City, Map<VehicleType, BigDecimal>> source) {
+        Map<City, Map<VehicleType, BigDecimal>> copy = new EnumMap<>(City.class);
+        for (Map.Entry<City, Map<VehicleType, BigDecimal>> entry : source.entrySet()) {
+            copy.put(entry.getKey(), new EnumMap<>(entry.getValue()));
+        }
+        return copy;
     }
 
     private WeatherData weather(City city, BigDecimal airTemperature, BigDecimal windSpeed, String phenomenon) {
