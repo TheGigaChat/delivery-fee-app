@@ -14,10 +14,22 @@ public class DeliveryFeeService {
 
     private final WeatherDataService weatherDataService;
 
+    /**
+     * Creates the service that calculates delivery fees.
+     *
+     * @param weatherDataService service used to load the latest weather for a city
+     */
     public DeliveryFeeService(WeatherDataService weatherDataService) {
         this.weatherDataService = weatherDataService;
     }
 
+    /**
+     * Calculates the delivery fee for the requested city and vehicle type.
+     *
+     * @param city requested city
+     * @param vehicleType requested vehicle type
+     * @return calculated delivery fee
+     */
     public BigDecimal calculateDeliveryFee(City city, VehicleType vehicleType) {
         WeatherData weatherData = weatherDataService.getLatestWeather(city)
                 .orElseThrow(() -> new WeatherDataNotFoundException(

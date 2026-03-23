@@ -8,6 +8,12 @@ import java.util.Optional;
 @Component
 public class StationCityMapper {
 
+    /**
+     * Maps an external station name to a supported internal city.
+     *
+     * @param stationName external station name
+     * @return matching city when the station is supported, otherwise empty
+     */
     public Optional<City> mapStationToCity(String stationName) {
         return switch (stationName) {
             case "Tallinn-Harku" -> Optional.of(City.TALLINN);

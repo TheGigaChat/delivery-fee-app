@@ -17,10 +17,22 @@ public class DeliveryFeeController {
 
     private final DeliveryFeeService deliveryFeeService;
 
+    /**
+     * Creates the controller for delivery-fee requests.
+     *
+     * @param deliveryFeeService service that calculates delivery fees
+     */
     public DeliveryFeeController(DeliveryFeeService deliveryFeeService) {
         this.deliveryFeeService = deliveryFeeService;
     }
 
+    /**
+     * Returns the calculated delivery fee for the requested city and vehicle type.
+     *
+     * @param city requested delivery city
+     * @param vehicleType requested vehicle type
+     * @return response DTO containing the calculated fee
+     */
     @GetMapping
     public DeliveryFeeResponse getDeliveryFee(
             @RequestParam City city,
