@@ -19,6 +19,17 @@ Example:
 GET /api/delivery-fee?city=TARTU&vehicleType=BIKE
 ```
 
+## Current Fee Calculation Behavior
+
+The underlying fee calculation service is now implemented and currently applies:
+
+- base fee by `city` and `vehicleType`
+- scooter and bike temperature surcharge rules
+- bike wind surcharge and forbidden-use rules
+- weather phenomenon surcharge and forbidden-use rules
+- `WeatherDataNotFoundException` when latest weather is missing for the requested city
+- `ForbiddenVehicleUsageException` when weather conditions forbid the selected vehicle type
+
 ## Planned Success Response
 
 Suggested response shape:
@@ -56,3 +67,4 @@ When the endpoint is implemented, this file should be updated with:
 - example success and failure responses
 - HTTP status codes
 - validation rules
+- mapping from domain exceptions to HTTP responses

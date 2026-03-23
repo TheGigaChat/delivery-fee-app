@@ -15,10 +15,12 @@ The repository currently contains an early Spring Boot application with initial 
 - `StationCityMapper` for mapping known station names to supported cities
 - `WeatherDataRepository` with a latest-by-city lookup method
 - `WeatherDataService` for retrieving the newest observation for a city
+- `DeliveryFeeService` for fee calculation based on city, vehicle, and latest weather
 - `WeatherApiClient` for downloading observation XML from the Estonian Environment Agency
 - `ObservationsXmlDto`, `StationXmlDto`, and `WeatherXmlParser` for XML deserialization
 - `WeatherImportService` for orchestrating fetch, parse, map, and persistence
 - `WeatherImportScheduler` for periodic import execution
+- custom exceptions for missing weather data and forbidden vehicle usage
 - no controller layer yet
 
 ## Target Component Layout
@@ -70,6 +72,14 @@ The `City` enum currently defines:
 - `TARTU`
 - `PARNU`
 
+### `VehicleType`
+
+The `VehicleType` enum currently defines:
+
+- `CAR`
+- `SCOOTER`
+- `BIKE`
+
 ### `WeatherData`
 
 The current `WeatherData` entity includes:
@@ -107,6 +117,20 @@ The service layer has been started with a focused weather lookup service:
 - returns `Optional<WeatherData>` so missing weather data can be handled explicitly by later layers
 
 This is the first step toward keeping controllers thin and keeping lookup rules out of the controller layer.
+
+### `DeliveryFeeService`
+
+The service layer now also contains a fee calculation service:
+
+- loads the latest weather for the requested city through `WeatherDataService`
+- applies base fee rules by city and vehicle type
+- applies extra fees for scooter and bike temperature conditions
+- applies bike wind-speed surcharge and forbidden-use checks
+- applies weather phenomenon surcharge and forbidden-use checks
+- throws `WeatherDataNotFoundException` when no weather record exists for the requested city
+- throws `ForbiddenVehicleUsageException` when weather conditions make the selected vehicle invalid
+
+This keeps fee rules in a dedicated business service instead of mixing them with controllers or repository code.
 
 ### `WeatherApiClient`
 
@@ -160,6 +184,16 @@ The mapper package now contains a station-to-city mapper:
 - returns `Optional<City>` for unmapped stations
 
 This supports later filtering of external weather observations down to the cities the application serves.
+
+## Exception Support
+
+### `WeatherDataNotFoundException`
+
+Raised when fee calculation cannot find the latest weather data for the requested city.
+
+### `ForbiddenVehicleUsageException`
+
+Raised when wind or weather phenomenon rules make the selected vehicle type invalid.
 
 ## Scheduling
 

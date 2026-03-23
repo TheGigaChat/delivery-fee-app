@@ -4,7 +4,6 @@
 
 - create domain model for weather observations
 - integrate weather source import
-- implement delivery fee calculation rules
 - expose fee calculation endpoint
 - add centralized error handling
 - write unit and integration tests
@@ -14,6 +13,7 @@
 - service-layer weather lookup based on the latest persisted observation
 - external weather XML fetch through a first API client
 - scheduler-driven import execution through configurable cron
+- delivery fee calculation rules and domain-specific exceptions
 
 ## Documentation Work
 

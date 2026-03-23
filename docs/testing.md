@@ -18,6 +18,7 @@ The test suite now also covers:
 - `WeatherDataRepository.findFirstByCityOrderByObservationTimestampDesc(city)` for latest-record lookup and no-data cases
 - `WeatherXmlParser.parse(xml)` for valid XML, ignored extra tags, and core field extraction
 - `WeatherImportService.importWeatherData()` for filtering mapped stations and converting parsed values before save
+- `DeliveryFeeService.calculateDeliveryFee(...)` for base fees, weather surcharges, forbidden cases, and missing weather data
 
 ## Recommended Test Layers
 
@@ -39,7 +40,16 @@ Priority order for the current codebase:
 - weather lookup service tests now
 - XML parsing tests now
 - weather import service tests now
-- delivery fee calculation service tests as soon as the fee rules are implemented
+- delivery fee calculation service tests now
+
+Current fee-service unit test focus:
+
+- base fee for each city and vehicle type
+- scooter and bike temperature fee rules
+- bike wind surcharge and forbidden-use threshold
+- snow, sleet, and rain phenomenon surcharges
+- glaze, hail, and thunder forbidden-use conditions
+- missing weather data raising `WeatherDataNotFoundException`
 
 ### Integration Tests
 
