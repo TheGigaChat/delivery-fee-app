@@ -16,7 +16,9 @@ The first focused unit tests now cover `StationCityMapper` for:
 The test suite now also covers:
 
 - `WeatherDataService.getLatestWeather(city)` returning the repository result
+- `WeatherApiClient.fetchObservationsXml()` delegating to `RestTemplate` with the configured source URL
 - `WeatherDataRepository.findFirstByCityOrderByObservationTimestampDesc(city)` for latest-record lookup and no-data cases
+- persisted `WeatherData.getId()` access through repository-backed entities
 - `WeatherXmlParser.parse(xml)` for valid XML, ignored extra tags, core field extraction, and wrapped parser failures
 - `WeatherImportService.importWeatherData()` for filtering mapped stations and converting parsed values before save
 - private `parseBigDecimal(...)` handling for `null`, blank, and invalid input
@@ -41,11 +43,13 @@ Focus on isolated business rules:
 - import-service filtering and conversion rules
 - DTO bean behavior where framework serialization depends on it
 - scheduler delegation without testing cron timing itself
+- API client delegation to the HTTP client abstraction
 
 Priority order for the current codebase:
 
 - mapper tests now
 - weather lookup service tests now
+- API client tests now
 - XML parsing tests now
 - weather import service tests now
 - scheduler delegation tests now
