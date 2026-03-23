@@ -56,6 +56,10 @@ Priority order for the current codebase:
 - delivery fee calculation service tests now
 - controller slice tests now
 
+Current fee-service unit test setup:
+
+- DeliveryFeeServiceTest loads base fees from src/test/resources/application-test.yml so the service is exercised against bound configuration instead of mocked fee maps
+
 Current fee-service unit test focus:
 
 - base fee for each city and vehicle type
@@ -117,3 +121,6 @@ A feature change is not complete unless:
 - behavior is documented
 - relevant tests exist or are updated
 - gaps are explicitly recorded in the associated change note
+
+
+

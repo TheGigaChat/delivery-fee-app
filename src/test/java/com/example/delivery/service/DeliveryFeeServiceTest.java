@@ -1,5 +1,6 @@
 package com.example.delivery.service;
 
+import com.example.delivery.config.DeliveryFeeProperties;
 import com.example.delivery.entity.WeatherData;
 import com.example.delivery.enums.City;
 import com.example.delivery.enums.VehicleType;
@@ -8,6 +9,14 @@ import com.example.delivery.exception.WeatherDataNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,13 +24,41 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@SpringBootTest(classes = DeliveryFeeServiceTest.TestConfig.class)
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.yml")
 class DeliveryFeeServiceTest {
 
-    private final WeatherDataService weatherDataService = mock(WeatherDataService.class);
-    private final DeliveryFeeService deliveryFeeService = new DeliveryFeeService(weatherDataService);
+    @TestConfiguration
+    @EnableConfigurationProperties(DeliveryFeeProperties.class)
+    static class TestConfig {
+
+        @Bean
+        DeliveryFeeService deliveryFeeService(WeatherDataService weatherDataService, DeliveryFeeProperties deliveryFeeProperties) {
+            return new DeliveryFeeService(weatherDataService, deliveryFeeProperties);
+        }
+    }
+
+    @MockBean
+    private WeatherDataService weatherDataService;
+
+    @Autowired
+    private DeliveryFeeService deliveryFeeService;
+
+    @Autowired
+    private DeliveryFeeProperties deliveryFeeProperties;
+
+    @Test
+    void shouldLoadBaseFeesFromTestConfiguration() {
+        assertThat(deliveryFeeProperties.getBaseFees().get(City.TALLINN).get(VehicleType.CAR))
+                .isEqualByComparingTo("4.0");
+        assertThat(deliveryFeeProperties.getBaseFees().get(City.TARTU).get(VehicleType.SCOOTER))
+                .isEqualByComparingTo("2.5");
+        assertThat(deliveryFeeProperties.getBaseFees().get(City.PARNU).get(VehicleType.BIKE))
+                .isEqualByComparingTo("2.5");
+    }
 
     @ParameterizedTest
     @CsvSource({

@@ -1,5 +1,6 @@
 package com.example.delivery.service;
 
+import com.example.delivery.config.DeliveryFeeProperties;
 import com.example.delivery.entity.WeatherData;
 import com.example.delivery.enums.City;
 import com.example.delivery.enums.VehicleType;
@@ -8,19 +9,22 @@ import com.example.delivery.exception.WeatherDataNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 
 @Service
 public class DeliveryFeeService {
 
     private final WeatherDataService weatherDataService;
+    private final DeliveryFeeProperties deliveryFeeProperties;
 
     /**
      * Creates the service that calculates delivery fees.
      *
      * @param weatherDataService service used to load the latest weather for a city
      */
-    public DeliveryFeeService(WeatherDataService weatherDataService) {
+    public DeliveryFeeService(WeatherDataService weatherDataService, DeliveryFeeProperties deliveryFeeProperties) {
         this.weatherDataService = weatherDataService;
+        this.deliveryFeeProperties = deliveryFeeProperties;
     }
 
     /**
@@ -43,23 +47,17 @@ public class DeliveryFeeService {
     }
 
     private BigDecimal calculateBaseFee(City city, VehicleType vehicleType) {
-        return switch (city) {
-            case TALLINN -> switch (vehicleType) {
-                case CAR -> new BigDecimal("4.0");
-                case SCOOTER ->  new BigDecimal("3.5");
-                case BIKE -> new BigDecimal("3.0");
-            };
-            case TARTU -> switch (vehicleType) {
-                case CAR -> new BigDecimal("3.5");
-                case BIKE -> new BigDecimal("3.0");
-                case SCOOTER -> new BigDecimal("2.5");
-            };
-            case PARNU ->  switch (vehicleType) {
-                case CAR -> new BigDecimal("3.0");
-                case BIKE -> new BigDecimal("2.5");
-                case SCOOTER -> new BigDecimal("2.0");
-            };
-        };
+        BigDecimal fee = deliveryFeeProperties.getBaseFees()
+                .getOrDefault(city, java.util.Collections.emptyMap())
+                .get(vehicleType);
+
+        if (fee == null) {
+            throw new IllegalArgumentException(
+                    "Base fee not configured for city " + city + " and vehicle type " + vehicleType
+            );
+        }
+
+        return fee;
     }
 
     private BigDecimal calculateExtraFee(WeatherData weatherData, VehicleType vehicleType) {
